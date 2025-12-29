@@ -1,0 +1,36 @@
+# JetRacer Configuration File
+
+# Hardware Settings
+hardware:
+  robot_base_port: "/dev/ttyACM0"
+  camera_device: "/dev/video0"
+  camera_device2: "/dev/video1"
+  camera_type: "usb"  
+  camera_width: 640
+  camera_height: 480
+  camera_fps: 30
+
+# Control Settings
+control:
+  default_linear_speed: 0.3
+  default_angular_speed:  0.8
+  max_linear_speed:  1.0
+  max_angular_speed: 2.0
+  
+# Robot Parameters (from calibration)
+robot_params:
+  coefficient_a: -0.016073
+  coefficient_b: 0.176183
+  coefficient_c: -23.428084
+  coefficient_d: 1500
+  linear_correction:  1.0
+  servo_bias: 0
+  pid_p: 350
+  pid_i: 120
+  pid_d: 0
+
+# Feature Flags (enable/disable modules)
+features:
+  keyboard_control: true
+  imu_monitor: true
+  camera: false
