@@ -1,0 +1,27 @@
+2026-01-21 10:42:54,325 - INFO - ============================================================
+2026-01-21 10:42:54,326 - INFO - JetRacer Control System Started
+2026-01-21 10:42:54,326 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_104254.log
+2026-01-21 10:42:54,326 - INFO - ============================================================
+2026-01-21 10:42:54,326 - INFO - Checking hardware...
+2026-01-21 10:42:54,326 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 10:42:54,326 - INFO - USB Camera found at /dev/video0
+2026-01-21 10:42:54,326 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 10:42:54,375 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 10:42:54,376 - INFO - Syncing custom scripts to Docker...
+2026-01-21 10:42:54,507 - INFO - Synced: imu_monitor.py
+2026-01-21 10:42:54,628 - INFO - Synced: keyboard_control.py
+2026-01-21 10:42:54,742 - INFO - Synced: camera.py
+2026-01-21 10:42:54,742 - INFO - Synced 3 scripts
+2026-01-21 10:42:57,588 - INFO - User selected menu option: 
+2026-01-21 10:42:57,588 - WARNING - Invalid choice: 
+2026-01-21 10:42:58,871 - INFO - User selected menu option: 2
+2026-01-21 10:42:58,872 - INFO - Starting Camera Monitor Mode
+2026-01-21 10:42:58,872 - INFO - Starting roscore...
+2026-01-21 10:43:00,875 - INFO - Starting robot base...
+2026-01-21 10:43:02,879 - INFO - Starting USB camera...
+2026-01-21 10:43:05,885 - INFO - Launching camera viewer
+2026-01-21 10:56:20,094 - INFO - Camera monitor mode ended
+2026-01-21 10:56:21,656 - INFO - Shutting down...
+2026-01-21 10:56:21,658 - INFO - Stopping robot movement
+2026-01-21 10:56:23,663 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999598069998683 seconds
+2026-01-21 10:56:23,664 - INFO - Shutdown complete

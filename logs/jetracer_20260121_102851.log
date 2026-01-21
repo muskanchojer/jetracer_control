@@ -1,0 +1,27 @@
+2026-01-21 10:28:51,920 - INFO - ============================================================
+2026-01-21 10:28:51,920 - INFO - JetRacer Control System Started
+2026-01-21 10:28:51,920 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_102851.log
+2026-01-21 10:28:51,920 - INFO - ============================================================
+2026-01-21 10:28:51,920 - INFO - Checking hardware...
+2026-01-21 10:28:51,920 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 10:28:51,921 - INFO - USB Camera found at /dev/video0
+2026-01-21 10:28:51,921 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 10:28:51,977 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 10:28:51,977 - INFO - Syncing custom scripts to Docker...
+2026-01-21 10:28:52,097 - INFO - Synced: imu_monitor.py
+2026-01-21 10:28:52,217 - INFO - Synced: keyboard_control.py
+2026-01-21 10:28:52,369 - INFO - Synced: camera.py
+2026-01-21 10:28:52,369 - INFO - Synced 3 scripts
+2026-01-21 10:28:53,854 - INFO - User selected menu option: 2
+2026-01-21 10:28:53,854 - INFO - Starting Camera Monitor Mode
+2026-01-21 10:28:53,855 - INFO - Starting roscore...
+2026-01-21 10:28:55,858 - INFO - Starting robot base...
+2026-01-21 10:28:57,862 - INFO - Starting USB camera...
+2026-01-21 10:29:00,867 - INFO - Launching camera viewer
+2026-01-21 10:30:54,955 - INFO - Camera monitor mode ended
+2026-01-21 10:31:00,303 - INFO - User selected menu option: 
+2026-01-21 10:31:00,304 - WARNING - Invalid choice: 
+2026-01-21 10:31:02,937 - INFO - User selected menu option: 
+2026-01-21 10:31:02,938 - WARNING - Invalid choice: 
+2026-01-21 10:31:07,279 - INFO - User selected menu option: 0
+2026-01-21 10:31:07,279 - INFO - User exited

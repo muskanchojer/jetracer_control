@@ -1,0 +1,54 @@
+2026-01-21 11:11:17,284 - INFO - ============================================================
+2026-01-21 11:11:17,285 - INFO - JetRacer Control System Started
+2026-01-21 11:11:17,285 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_111117.log
+2026-01-21 11:11:17,285 - INFO - ============================================================
+2026-01-21 11:11:17,285 - INFO - Checking hardware...
+2026-01-21 11:11:17,285 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 11:11:17,285 - INFO - USB Camera found at /dev/video0
+2026-01-21 11:11:17,285 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 11:11:17,329 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 11:11:17,330 - INFO - Syncing custom scripts to Docker...
+2026-01-21 11:11:17,447 - INFO - Synced: imu_monitor.py
+2026-01-21 11:11:17,560 - INFO - Synced: keyboard_control.py
+2026-01-21 11:11:17,665 - INFO - Synced: camera.py
+2026-01-21 11:11:17,666 - INFO - Synced 3 scripts
+2026-01-21 11:11:21,194 - INFO - User selected menu option: 1
+2026-01-21 11:11:21,194 - INFO - Starting Keyboard Control Mode
+2026-01-21 11:11:21,195 - INFO - Starting roscore...
+2026-01-21 11:11:23,198 - INFO - Starting robot base...
+2026-01-21 11:11:25,202 - INFO - Launching keyboard control with logging
+2026-01-21 11:11:25,943 - INFO - [KEYBOARD] 
+2026-01-21 11:11:25,944 - INFO - [KEYBOARD] ========================================
+2026-01-21 11:11:25,944 - INFO - [KEYBOARD]     JetRacer Keyboard Control
+2026-01-21 11:11:25,944 - INFO - [KEYBOARD] ========================================
+2026-01-21 11:11:25,944 - INFO - [KEYBOARD]   W - Forward      S - Backward
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD]   A - Steer Left   D - Steer Right
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD]   X - Center       SPACE - Stop All
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD] 
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD]   + - Faster       - - Slower
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD]   Q - Quit
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD] ========================================
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD] Current Speed: Linear=0.30 Angular=0.80
+2026-01-21 11:11:25,945 - INFO - [KEYBOARD] 
+2026-01-21 11:11:43,918 - INFO - [KEYBOARD] Robot stopped
+2026-01-21 11:11:44,621 - INFO - Keyboard control mode ended
+2026-01-21 11:11:52,355 - INFO - User selected menu option: 
+2026-01-21 11:11:52,356 - WARNING - Invalid choice: 
+2026-01-21 11:11:55,707 - INFO - User selected menu option: 
+2026-01-21 11:11:55,708 - WARNING - Invalid choice: 
+2026-01-21 11:12:00,073 - INFO - User selected menu option: 
+2026-01-21 11:12:00,074 - WARNING - Invalid choice: 
+2026-01-21 11:12:05,832 - INFO - User selected menu option: 
+2026-01-21 11:12:05,833 - WARNING - Invalid choice: 
+2026-01-21 11:12:09,320 - INFO - User selected menu option: 
+2026-01-21 11:12:09,321 - WARNING - Invalid choice: 
+2026-01-21 11:12:11,120 - INFO - Shutting down...
+2026-01-21 11:12:11,120 - INFO - Stopping robot movement
+2026-01-21 11:12:11,614 - INFO - Shutting down...
+2026-01-21 11:12:11,615 - INFO - Stopping robot movement
+2026-01-21 11:12:12,267 - INFO - Shutting down...
+2026-01-21 11:12:12,270 - INFO - Stopping robot movement
+2026-01-21 11:12:12,807 - INFO - Shutting down...
+2026-01-21 11:12:12,807 - INFO - Stopping robot movement
+2026-01-21 11:12:14,813 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999548790001427 seconds
+2026-01-21 11:12:14,814 - INFO - Shutdown complete

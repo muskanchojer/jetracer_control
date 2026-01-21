@@ -1,0 +1,61 @@
+2026-01-21 11:38:49,970 - INFO - ============================================================
+2026-01-21 11:38:49,970 - INFO - JetRacer Control System Started
+2026-01-21 11:38:49,970 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_113849.log
+2026-01-21 11:38:49,970 - INFO - ============================================================
+2026-01-21 11:38:49,970 - INFO - Checking hardware...
+2026-01-21 11:38:49,970 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 11:38:49,971 - INFO - USB Camera found at /dev/video0
+2026-01-21 11:38:49,971 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 11:38:50,029 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 11:38:50,030 - INFO - Syncing custom scripts to Docker...
+2026-01-21 11:38:50,180 - INFO - Synced: imu_monitor.py
+2026-01-21 11:38:50,298 - INFO - Synced: keyboard_control.py
+2026-01-21 11:38:50,409 - INFO - Synced: camera.py
+2026-01-21 11:38:50,409 - INFO - Synced 3 scripts
+2026-01-21 11:39:03,958 - INFO - User selected menu option: 1
+2026-01-21 11:39:03,959 - INFO - Starting Keyboard Control Mode
+2026-01-21 11:39:03,959 - INFO - Starting roscore...
+2026-01-21 11:39:05,962 - INFO - Starting robot base...
+2026-01-21 11:39:07,966 - INFO - Launching keyboard control (interactive)
+2026-01-21 11:39:25,318 - INFO - Keyboard control mode ended
+2026-01-21 11:39:30,757 - INFO - User selected menu option: 2
+2026-01-21 11:39:31,006 - INFO - Starting Native Camera Monitor Mode
+2026-01-21 11:39:31,021 - INFO - Opening native camera at /dev/video0
+2026-01-21 11:39:31,021 - INFO - Camera viewer running in native thread
+2026-01-21 11:39:31,372 - INFO - Camera opened successfully, starting capture
+2026-01-21 11:39:34,260 - INFO - Camera: 60 frames captured
+2026-01-21 11:39:36,662 - INFO - Camera: 120 frames captured
+2026-01-21 11:39:39,066 - INFO - Camera: 180 frames captured
+2026-01-21 11:39:41,468 - INFO - Camera: 240 frames captured
+2026-01-21 11:39:43,870 - INFO - Camera: 300 frames captured
+2026-01-21 11:39:46,273 - INFO - Camera: 360 frames captured
+2026-01-21 11:39:48,677 - INFO - Camera: 420 frames captured
+2026-01-21 11:39:51,077 - INFO - Camera: 480 frames captured
+2026-01-21 11:39:53,481 - INFO - Camera: 540 frames captured
+2026-01-21 11:39:55,888 - INFO - Camera: 600 frames captured
+2026-01-21 11:39:58,286 - INFO - Camera: 660 frames captured
+2026-01-21 11:40:00,691 - INFO - Camera: 720 frames captured
+2026-01-21 11:40:03,094 - INFO - Camera: 780 frames captured
+2026-01-21 11:40:05,778 - INFO - Camera: 840 frames captured
+2026-01-21 11:40:08,998 - INFO - Camera: 900 frames captured
+2026-01-21 11:40:12,002 - INFO - Camera: 960 frames captured
+2026-01-21 11:40:15,006 - INFO - Camera: 1020 frames captured
+2026-01-21 11:40:18,011 - INFO - Camera: 1080 frames captured
+2026-01-21 11:40:21,014 - INFO - Camera: 1140 frames captured
+2026-01-21 11:40:23,017 - INFO - User pressed 'q', stopping camera
+2026-01-21 11:40:23,023 - INFO - Camera stopped. Total frames: 1180
+2026-01-21 11:40:23,024 - INFO - Camera monitor mode ended
+2026-01-21 11:40:26,918 - INFO - User selected menu option: 
+2026-01-21 11:40:26,919 - WARNING - Invalid choice: 
+2026-01-21 11:40:29,167 - INFO - User selected menu option: 3
+2026-01-21 11:40:29,168 - INFO - Starting IMU Monitor Mode
+2026-01-21 11:40:29,168 - INFO - Starting roscore...
+2026-01-21 11:40:31,171 - INFO - Starting robot base...
+2026-01-21 11:40:33,174 - INFO - Starting IMU monitor
+2026-01-21 11:40:33,176 - ERROR - Error reading process output: 'NoneType' object has no attribute 'readline'
+2026-01-21 11:40:35,179 - INFO - Launching keyboard control (interactive)
+2026-01-21 11:41:15,595 - INFO - IMU monitor mode ended
+2026-01-21 11:41:30,345 - INFO - Shutting down...
+2026-01-21 11:41:30,347 - INFO - Stopping robot movement
+2026-01-21 11:41:32,353 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999378860011348 seconds
+2026-01-21 11:41:32,354 - INFO - Shutdown complete

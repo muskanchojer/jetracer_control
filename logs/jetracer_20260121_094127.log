@@ -1,0 +1,27 @@
+2026-01-21 09:41:27,445 - INFO - ============================================================
+2026-01-21 09:41:27,445 - INFO - JetRacer Control System Started
+2026-01-21 09:41:27,445 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_094127.log
+2026-01-21 09:41:27,445 - INFO - ============================================================
+2026-01-21 09:41:27,446 - INFO - Checking hardware...
+2026-01-21 09:41:27,446 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 09:41:27,446 - INFO - USB Camera found at /dev/video0
+2026-01-21 09:41:27,446 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 09:41:27,500 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 09:41:27,500 - INFO - Syncing custom scripts to Docker...
+2026-01-21 09:41:27,624 - INFO - Synced: imu_monitor.py
+2026-01-21 09:41:27,737 - INFO - Synced: keyboard_control.py
+2026-01-21 09:41:27,851 - INFO - Synced: camera.py
+2026-01-21 09:41:27,852 - INFO - Synced 3 scripts
+2026-01-21 09:41:43,532 - INFO - User selected menu option: 
+2026-01-21 09:41:43,533 - WARNING - Invalid choice: 
+2026-01-21 09:41:45,712 - INFO - User selected menu option: 33
+2026-01-21 09:41:45,712 - WARNING - Invalid choice: 33
+2026-01-21 09:41:48,030 - INFO - User selected menu option: 3
+2026-01-21 09:41:48,031 - INFO - Starting IMU Monitor Mode
+2026-01-21 09:41:48,032 - INFO - Starting roscore...
+2026-01-21 09:41:50,036 - INFO - Starting robot base...
+2026-01-21 09:41:52,039 - INFO - Starting IMU monitor in background
+2026-01-21 09:41:54,043 - INFO - Launching keyboard control
+2026-01-21 09:42:32,028 - INFO - IMU monitor mode ended
+2026-01-21 09:42:44,325 - INFO - User selected menu option: 0
+2026-01-21 09:42:44,325 - INFO - User exited

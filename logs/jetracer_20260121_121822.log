@@ -1,0 +1,60 @@
+2026-01-21 12:18:22,845 - INFO - ============================================================
+2026-01-21 12:18:22,845 - INFO - JetRacer Control System Started
+2026-01-21 12:18:22,845 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_121822.log
+2026-01-21 12:18:22,845 - INFO - ============================================================
+2026-01-21 12:18:22,846 - INFO - Checking hardware...
+2026-01-21 12:18:22,846 - INFO - Robot connected at /dev/ttyACM0
+2026-01-21 12:18:22,846 - INFO - USB Camera found at /dev/video0
+2026-01-21 12:18:22,846 - INFO - Checking Docker container: jetracer_ros
+2026-01-21 12:18:22,894 - INFO - Docker container 'jetracer_ros' is running
+2026-01-21 12:18:22,895 - INFO - Syncing custom scripts to Docker...
+2026-01-21 12:18:23,009 - INFO - Synced: imu_monitor.py
+2026-01-21 12:18:23,151 - INFO - Synced: keyboard_control.py
+2026-01-21 12:18:23,269 - INFO - Synced: camera.py
+2026-01-21 12:18:23,269 - INFO - Synced 3 scripts
+2026-01-21 12:18:26,663 - INFO - User selected menu option: 2
+2026-01-21 12:18:26,882 - INFO - Starting Native Camera Monitor Mode
+2026-01-21 12:18:26,890 - INFO - Opening native camera at /dev/video0
+2026-01-21 12:18:26,890 - INFO - Camera viewer running in native thread
+2026-01-21 12:18:27,221 - INFO - Camera opened successfully, starting capture
+2026-01-21 12:18:30,049 - INFO - Camera: 60 frames captured
+2026-01-21 12:18:32,452 - INFO - Camera: 120 frames captured
+2026-01-21 12:18:34,855 - INFO - Camera: 180 frames captured
+2026-01-21 12:18:37,258 - INFO - Camera: 240 frames captured
+2026-01-21 12:18:39,662 - INFO - Camera: 300 frames captured
+2026-01-21 12:18:42,062 - INFO - Camera: 360 frames captured
+2026-01-21 12:18:44,466 - INFO - Camera: 420 frames captured
+2026-01-21 12:18:46,870 - INFO - Camera: 480 frames captured
+2026-01-21 12:18:49,269 - INFO - Camera: 540 frames captured
+2026-01-21 12:18:51,994 - INFO - Camera: 600 frames captured
+2026-01-21 12:18:55,238 - INFO - Camera: 660 frames captured
+2026-01-21 12:18:58,242 - INFO - Camera: 720 frames captured
+2026-01-21 12:19:01,247 - INFO - Camera: 780 frames captured
+2026-01-21 12:19:04,251 - INFO - Camera: 840 frames captured
+2026-01-21 12:19:07,251 - INFO - Camera: 900 frames captured
+2026-01-21 12:19:10,255 - INFO - Camera: 960 frames captured
+2026-01-21 12:19:13,258 - INFO - Camera: 1020 frames captured
+2026-01-21 12:19:16,263 - INFO - Camera: 1080 frames captured
+2026-01-21 12:19:19,267 - INFO - Camera: 1140 frames captured
+2026-01-21 12:19:22,272 - INFO - Camera: 1200 frames captured
+2026-01-21 12:19:25,275 - INFO - Camera: 1260 frames captured
+2026-01-21 12:19:28,275 - INFO - Camera: 1320 frames captured
+2026-01-21 12:19:31,280 - INFO - Camera: 1380 frames captured
+2026-01-21 12:19:34,284 - INFO - Camera: 1440 frames captured
+2026-01-21 12:19:35,385 - INFO - User pressed 'q', stopping camera
+2026-01-21 12:19:35,393 - INFO - Camera stopped. Total frames: 1462
+2026-01-21 12:19:35,395 - INFO - Camera monitor mode ended
+2026-01-21 12:19:35,396 - INFO - User selected menu option: q
+2026-01-21 12:19:35,396 - WARNING - Invalid choice: q
+2026-01-21 12:20:49,833 - INFO - User selected menu option: 3
+2026-01-21 12:20:49,834 - INFO - Starting IMU Monitor Mode
+2026-01-21 12:20:49,834 - INFO - Starting roscore...
+2026-01-21 12:20:51,838 - INFO - Starting robot base...
+2026-01-21 12:20:53,840 - INFO - Starting IMU monitor
+2026-01-21 12:20:53,843 - WARNING - [IMU] Process has no stdout to capture
+2026-01-21 12:20:55,845 - INFO - Launching keyboard control (interactive)
+2026-01-21 12:21:26,542 - INFO - IMU monitor mode ended
+2026-01-21 12:21:49,977 - INFO - Shutting down...
+2026-01-21 12:21:49,978 - INFO - Stopping robot movement
+2026-01-21 12:21:51,984 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999439339990204 seconds
+2026-01-21 12:21:51,985 - INFO - Shutdown complete
