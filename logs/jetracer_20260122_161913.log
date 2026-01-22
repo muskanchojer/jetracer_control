@@ -1,0 +1,10 @@
+2026-01-22 16:19:13,149 - INFO - ============================================================
+2026-01-22 16:19:13,150 - INFO - JetRacer Integrated System Started
+2026-01-22 16:19:13,150 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260122_161913.log
+2026-01-22 16:19:13,150 - INFO - ============================================================
+2026-01-22 16:19:13,151 - INFO - Checking hardware...
+2026-01-22 16:19:13,151 - INFO - Robot connected at /dev/ttyACM0
+2026-01-22 16:19:13,151 - INFO - USB Camera found at /dev/video0
+2026-01-22 16:19:13,151 - INFO - Checking Docker container: jetracer_ros
+2026-01-22 16:19:13,241 - ERROR - Docker container 'jetracer_ros' not found
+2026-01-22 16:19:13,242 - ERROR - Startup checks failed

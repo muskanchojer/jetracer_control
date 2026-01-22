@@ -1,0 +1,119 @@
+2026-01-22 16:00:36,651 - INFO - ============================================================
+2026-01-22 16:00:36,651 - INFO - JetRacer Integrated System Started
+2026-01-22 16:00:36,651 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260122_160036.log
+2026-01-22 16:00:36,651 - INFO - ============================================================
+2026-01-22 16:00:36,651 - INFO - Checking hardware...
+2026-01-22 16:00:36,652 - INFO - Robot connected at /dev/ttyACM0
+2026-01-22 16:00:36,652 - INFO - USB Camera found at /dev/video0
+2026-01-22 16:00:36,652 - INFO - Checking Docker container: jetracer_ros
+2026-01-22 16:00:36,704 - INFO - Docker container 'jetracer_ros' is running
+2026-01-22 16:00:36,705 - INFO - Syncing custom scripts to Docker...
+2026-01-22 16:00:36,816 - INFO - Synced: imu_monitor.py
+2026-01-22 16:00:36,932 - INFO - Synced: keyboard_control.py
+2026-01-22 16:00:37,044 - INFO - Synced: camera.py
+2026-01-22 16:00:37,044 - INFO - Synced 3 scripts
+2026-01-22 16:00:37,045 - INFO - Starting roscore...
+2026-01-22 16:00:39,048 - INFO - Starting robot base...
+2026-01-22 16:00:41,051 - INFO - Starting IMU monitor with logging...
+2026-01-22 16:00:41,838 - INFO - [IMU] ==================================================
+2026-01-22 16:00:41,838 - INFO - [IMU] 📡 IMU Monitor Started
+2026-01-22 16:00:41,839 - INFO - [IMU] ==================================================
+2026-01-22 16:00:41,839 - INFO - [IMU]    Monitoring orientation and acceleration
+2026-01-22 16:00:41,839 - INFO - [IMU]    Press Ctrl+C to stop
+2026-01-22 16:00:41,839 - INFO - [IMU] ==================================================
+2026-01-22 16:00:41,839 - INFO - [IMU] 
+2026-01-22 16:00:42,038 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.10° | Accel: X=-0.17 Y= 0.19 Z=10.56 | Msgs: 10
+2026-01-22 16:00:42,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.10° | Accel: X=-0.22 Y= 0.21 Z=10.55 | Msgs: 20
+2026-01-22 16:00:42,438 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.10° | Accel: X=-0.19 Y= 0.21 Z=10.55 | Msgs: 30
+2026-01-22 16:00:42,638 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.23 Z=10.58 | Msgs: 40
+2026-01-22 16:00:42,838 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.23 Z=10.58 | Msgs: 50
+2026-01-22 16:00:43,038 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.21 Z=10.58 | Msgs: 60
+2026-01-22 16:00:43,057 - INFO - Starting native camera window...
+2026-01-22 16:00:43,058 - INFO - Camera thread started
+2026-01-22 16:00:43,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.24 Y= 0.25 Z=10.57 | Msgs: 70
+2026-01-22 16:00:43,438 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.21 Z=10.59 | Msgs: 80
+2026-01-22 16:00:43,465 - INFO - Camera window opened successfully
+2026-01-22 16:00:43,638 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.23 Z=10.56 | Msgs: 90
+2026-01-22 16:00:43,838 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.20 Z=10.57 | Msgs: 100
+2026-01-22 16:00:44,038 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.20 Z=10.57 | Msgs: 110
+2026-01-22 16:00:44,060 - INFO - Starting keyboard control...
+2026-01-22 16:00:44,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.21 Z=10.54 | Msgs: 120
+2026-01-22 16:00:44,438 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.20 Z=10.57 | Msgs: 130
+2026-01-22 16:00:44,638 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.20 Z=10.56 | Msgs: 140
+2026-01-22 16:00:44,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.24 Z=10.55 | Msgs: 150
+2026-01-22 16:00:45,038 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.23 Z=10.58 | Msgs: 160
+2026-01-22 16:00:45,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.22 Y= 0.20 Z=10.58 | Msgs: 170
+2026-01-22 16:00:45,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.18 Z=10.55 | Msgs: 180
+2026-01-22 16:00:45,639 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.23 Z=10.52 | Msgs: 190
+2026-01-22 16:00:45,838 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.22 Z=10.56 | Msgs: 200
+2026-01-22 16:00:46,039 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.21 Z=10.55 | Msgs: 210
+2026-01-22 16:00:46,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.23 Z=10.60 | Msgs: 220
+2026-01-22 16:00:46,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.23 Z=10.54 | Msgs: 230
+2026-01-22 16:00:46,638 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.18 Z=10.55 | Msgs: 240
+2026-01-22 16:00:46,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.24 Z=10.55 | Msgs: 250
+2026-01-22 16:00:47,039 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.23 Z=10.55 | Msgs: 260
+2026-01-22 16:00:47,238 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.21 Z=10.55 | Msgs: 270
+2026-01-22 16:00:47,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.20 Z=10.57 | Msgs: 280
+2026-01-22 16:00:47,639 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.23 Y= 0.21 Z=10.56 | Msgs: 290
+2026-01-22 16:00:47,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.20 Z=10.56 | Msgs: 300
+2026-01-22 16:00:48,039 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.19 Z=10.56 | Msgs: 310
+2026-01-22 16:00:48,239 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.21 Z=10.58 | Msgs: 320
+2026-01-22 16:00:48,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.18 Z=10.52 | Msgs: 330
+2026-01-22 16:00:48,639 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.19 Z=10.59 | Msgs: 340
+2026-01-22 16:00:48,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.22 Y= 0.24 Z=10.56 | Msgs: 350
+2026-01-22 16:00:49,039 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.22 Z=10.55 | Msgs: 360
+2026-01-22 16:00:49,239 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.24 Z=10.56 | Msgs: 370
+2026-01-22 16:00:49,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.23 Z=10.58 | Msgs: 380
+2026-01-22 16:00:49,639 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.18 Z=10.55 | Msgs: 390
+2026-01-22 16:00:49,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.24 Z=10.52 | Msgs: 400
+2026-01-22 16:00:50,039 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.21 Z=10.55 | Msgs: 410
+2026-01-22 16:00:50,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.20 Z=10.51 | Msgs: 420
+2026-01-22 16:00:50,439 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.23 Z=10.57 | Msgs: 430
+2026-01-22 16:00:50,639 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.21 Z=10.52 | Msgs: 440
+2026-01-22 16:00:50,839 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.22 Z=10.53 | Msgs: 450
+2026-01-22 16:00:51,040 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.22 Z=10.78 | Msgs: 460
+2026-01-22 16:00:51,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.23 Z=10.56 | Msgs: 470
+2026-01-22 16:00:51,440 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.22 Z=10.51 | Msgs: 480
+2026-01-22 16:00:51,640 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.32 Z=10.74 | Msgs: 490
+2026-01-22 16:00:51,840 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.21 Z=10.60 | Msgs: 500
+2026-01-22 16:00:52,040 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.16 Y= 0.23 Z=10.59 | Msgs: 510
+2026-01-22 16:00:52,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.22 Z=10.59 | Msgs: 520
+2026-01-22 16:00:52,440 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.25 Z=10.63 | Msgs: 530
+2026-01-22 16:00:52,640 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.21 Z=10.47 | Msgs: 540
+2026-01-22 16:00:52,840 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.24 Z=10.54 | Msgs: 550
+2026-01-22 16:00:53,040 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.18 Y= 0.24 Z=10.59 | Msgs: 560
+2026-01-22 16:00:53,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.18 Z=10.60 | Msgs: 570
+2026-01-22 16:00:53,440 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.20 Y= 0.24 Z=10.62 | Msgs: 580
+2026-01-22 16:00:53,640 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.17 Y= 0.23 Z=10.61 | Msgs: 590
+2026-01-22 16:00:53,840 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.20 Y= 0.27 Z=10.59 | Msgs: 600
+2026-01-22 16:00:53,949 - INFO - Camera: 300 frames captured
+2026-01-22 16:00:54,040 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.21 Y= 0.20 Z=10.55 | Msgs: 610
+2026-01-22 16:00:54,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.20 Y= 0.23 Z=10.56 | Msgs: 620
+2026-01-22 16:00:54,440 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -112.00° | Accel: X=-0.19 Y= 0.22 Z=10.59 | Msgs: 630
+2026-01-22 16:00:54,640 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.20 Y= 0.22 Z=10.49 | Msgs: 640
+2026-01-22 16:00:54,840 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.20 Y= 0.24 Z=10.57 | Msgs: 650
+2026-01-22 16:00:55,041 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.25 Y= 0.20 Z=10.55 | Msgs: 660
+2026-01-22 16:00:55,240 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.17 Y= 0.20 Z=10.57 | Msgs: 670
+2026-01-22 16:00:55,441 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.19 Y= 0.24 Z=10.57 | Msgs: 680
+2026-01-22 16:00:55,641 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.22 Y= 0.19 Z=10.54 | Msgs: 690
+2026-01-22 16:00:55,840 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.17 Y= 0.20 Z=10.58 | Msgs: 700
+2026-01-22 16:00:56,040 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.18 Y= 0.26 Z=10.59 | Msgs: 710
+2026-01-22 16:00:56,241 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.19 Y= 0.19 Z=10.56 | Msgs: 720
+2026-01-22 16:00:56,441 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.19 Y= 0.18 Z=10.61 | Msgs: 730
+2026-01-22 16:00:56,641 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.21 Y= 0.21 Z=10.54 | Msgs: 740
+2026-01-22 16:00:56,728 - INFO - Keyboard control ended
+2026-01-22 16:00:56,728 - INFO - Shutting down...
+2026-01-22 16:00:56,728 - INFO - Stopping robot movement
+2026-01-22 16:00:56,758 - INFO - Camera stopped. Total frames: 384
+2026-01-22 16:00:56,841 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.17 Y= 0.24 Z=10.56 | Msgs: 750
+2026-01-22 16:00:57,041 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.22 Y= 0.23 Z=10.55 | Msgs: 760
+2026-01-22 16:00:57,241 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.22 Y= 0.24 Z=10.61 | Msgs: 770
+2026-01-22 16:00:57,441 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.18 Y= 0.21 Z=10.56 | Msgs: 780
+2026-01-22 16:00:57,641 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.19 Y= 0.24 Z=10.55 | Msgs: 790
+2026-01-22 16:00:57,841 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.17 Y= 0.22 Z=10.60 | Msgs: 800
+2026-01-22 16:00:58,041 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.18 Y= 0.26 Z=10.60 | Msgs: 810
+2026-01-22 16:00:58,241 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.24 Y= 0.24 Z=10.55 | Msgs: 820
+2026-01-22 16:00:58,441 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.16 Y= 0.22 Z=10.55 | Msgs: 830
+2026-01-22 16:00:58,641 - INFO - [IMU] 🧭 Roll:   0.00° | Pitch:   0.00° | Yaw: -111.90° | Accel: X=-0.12 Y= 0.36 Z=11.06 | Msgs: 840
+2026-01-22 16:00:58,735 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999602870011586 seconds
+2026-01-22 16:00:58,735 - INFO - Shutdown complete
