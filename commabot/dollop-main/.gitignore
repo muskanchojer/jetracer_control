@@ -1,0 +1,6 @@
+__pycache__
+*.safetensors
+.*.swp
+.DS_Store
+data/
+

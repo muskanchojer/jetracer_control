@@ -1,0 +1,42 @@
+# Autonomous Control Configuration
+
+# Model paths
+models:
+  yolov8_weights: "models/yolov8n.pt"  # PyTorch weights for inference
+  yolov8_safetensors: "models/yolov8n.safetensors"  # Optional: tinygrad weights
+  policy_model: "commabot/dollop-main/tinynet.safetensors"  # TinyNet policy weights
+  
+# Vision settings
+vision:
+  camera_width: 640
+  camera_height: 480
+  use_gpu: true
+  device: "cuda"  # cuda or cpu
+  
+# Control mapping (policy output to robot commands)
+control_mapping:
+  # Map policy predictions to robot velocities
+  left:
+    linear: 0.25      # Forward speed when turning left
+    angular: 0.6      # Turn rate (positive = left)
+  straight:
+    linear: 0.35      # Forward speed going straight
+    angular: 0.0      # No turning
+  right:
+    linear: 0.25      # Forward speed when turning right
+    angular: -0.6     # Turn rate (negative = right)
+  reverse:
+    linear: -0.2      # Backward speed
+    angular: 0.0      # No turning while reversing
+
+# Safety settings
+safety:
+  confidence_threshold: 0.3  # Minimum confidence to execute action
+  max_execution_time: 300    # Maximum autonomous run time (seconds)
+  emergency_stop_enabled: true
+  
+# Inference settings
+inference:
+  use_tinygrad: true   # Use tinygrad (true) or PyTorch/ultralytics (false)
+  prediction_rate: 1   # Predictions per second (1 = one prediction per second, reduces load)
+  warmup_iterations: 3 # Number of warmup runs

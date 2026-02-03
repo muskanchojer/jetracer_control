@@ -1,0 +1,53 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Models (large files)
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.tflite
+
+# Data
+data/trajectories/*.hevc
+data/trajectories/*.mp4
+data/*.hevc
+data/*.mp4
+
+# Tinygrad repo (if cloned)
+tinygrad/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

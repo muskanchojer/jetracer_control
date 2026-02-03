@@ -1,0 +1,27 @@
+# JetRacer Autonomous Control System - Python Dependencies
+
+# Core dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+PyYAML>=5.4.0
+
+# Computer vision and ML
+ultralytics>=8.0.0  # YOLOv8 for vision processing
+torch>=2.0.0        # PyTorch backend for ultralytics
+torchvision>=0.15.0
+safetensors>=0.4.0  # For loading trained model weights
+
+# Optional: tinygrad for lightweight inference (commented out by default)
+# Install manually from: https://github.com/tinygrad/tinygrad
+# git clone https://github.com/tinygrad/tinygrad.git
+# cd tinygrad && python -m pip install -e .
+
+# Video processing (for dollop compatibility)
+av>=10.0.0          # PyAV for video encoding/decoding
+
+# Progress bars and utilities
+tqdm>=4.60.0
+
+# Note: Some packages may need system dependencies on Ubuntu 22.04:
+# sudo apt-get install -y python3-opencv libopencv-dev
+# sudo apt-get install -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev

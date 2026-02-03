@@ -26,25 +26,6 @@ class IMUMonitor:
         print("   Press Ctrl+C to stop")
         print("="*50 + "\n")
         sys.stdout.flush()
-    
-    def yaw_to_compass(self, yaw_deg):
-        """Convert yaw angle to compass direction
-        
-        Args:
-            yaw_deg: Yaw angle in degrees (-180 to 180)
-            
-        Returns:
-            tuple: (compass_heading, direction_string)
-        """
-        # Normalize yaw to 0-360 range (0 = North, 90 = East, 180 = South, 270 = West)
-        compass_heading = (yaw_deg + 360) % 360
-        
-        # Determine cardinal direction
-        directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-        index = int((compass_heading + 22.5) / 45) % 8
-        direction = directions[index]
-        
-        return compass_heading, direction
         
     def imu_callback(self, msg):
         """Process IMU data"""
@@ -64,15 +45,12 @@ class IMUMonitor:
         pitch_deg = math.degrees(pitch)
         yaw_deg = math.degrees(yaw)
         
-        # Convert yaw to compass heading
-        compass_heading, compass_dir = self.yaw_to_compass(yaw_deg)
-        
         # Extract linear acceleration
         accel = msg.linear_acceleration
         
         # Log every N messages with newline (for proper file logging)
         if self.msg_count % self.log_interval == 0:
-            output = f"🧭 Compass: {compass_heading:6.2f}° {compass_dir:2s} | Roll: {roll_deg:6.2f}° | Pitch: {pitch_deg:6.2f}° | Yaw: {yaw_deg:6.2f}° | Accel: X={accel.x:5.2f} Y={accel.y:5.2f} Z={accel.z:5.2f} | Msgs: {self.msg_count}"
+            output = f"🧭 Roll: {roll_deg:6.2f}° | Pitch: {pitch_deg:6.2f}° | Yaw: {yaw_deg:6.2f}° | Accel: X={accel.x:5.2f} Y={accel.y:5.2f} Z={accel.z:5.2f} | Msgs: {self.msg_count}"
             print(output)
             sys.stdout.flush()
     

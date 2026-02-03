@@ -354,6 +354,37 @@ class JetRacerIntegrated:
         self.logger.info("Camera thread started")
         return thread
     
+    def start_keyboard_control(self):
+        """Start keyboard control only (for main.py integration)"""
+        signal.signal(signal.SIGINT, self.cleanup)
+        signal.signal(signal.SIGTERM, self.cleanup)
+        
+        try:
+            # Start ROS infrastructure
+            self.start_roscore()
+            self.start_robot_base()
+            
+            print("\n" + "="*60)
+            print("  ✅ ROS SYSTEMS READY")
+            print("="*60 + "\n")
+            
+            time.sleep(1)
+            
+            # Start keyboard control (blocking, interactive)
+            kb_proc = self.run_keyboard_control()
+            kb_proc.wait()
+            
+            self.logger.info("Keyboard control ended")
+            
+        except KeyboardInterrupt:
+            self.cleanup()
+        except Exception as e:
+            self.logger.exception(f"Error in execution: {e}")
+            print(f"\n❌ Error: {e}\n")
+            self.cleanup()
+        finally:
+            self.cleanup()
+    
     def run(self):
         """Main execution - run all components together"""
         signal.signal(signal.SIGINT, self.cleanup)

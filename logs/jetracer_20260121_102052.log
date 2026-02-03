@@ -1,59 +1,0 @@
-2026-01-21 10:20:52,550 - INFO - ============================================================
-2026-01-21 10:20:52,551 - INFO - JetRacer Control System Started
-2026-01-21 10:20:52,551 - INFO - Log file: ~/jetracer_control/logs/jetracer_20260121_102052.log
-2026-01-21 10:20:52,551 - INFO - ============================================================
-2026-01-21 10:20:52,551 - INFO - Checking hardware...
-2026-01-21 10:20:52,551 - INFO - Robot connected at /dev/ttyACM0
-2026-01-21 10:20:52,551 - INFO - USB Camera found at /dev/video0
-2026-01-21 10:20:52,551 - INFO - Checking Docker container: jetracer_ros
-2026-01-21 10:20:52,598 - INFO - Docker container 'jetracer_ros' is running
-2026-01-21 10:20:52,598 - INFO - Syncing custom scripts to Docker...
-2026-01-21 10:20:52,714 - INFO - Synced: imu_monitor.py
-2026-01-21 10:20:52,824 - INFO - Synced: keyboard_control.py
-2026-01-21 10:20:52,953 - INFO - Synced: camera.py
-2026-01-21 10:20:52,954 - INFO - Synced 3 scripts
-2026-01-21 10:20:58,065 - INFO - User selected menu option: 1
-2026-01-21 10:20:58,065 - INFO - Starting Keyboard Control Mode
-2026-01-21 10:20:58,066 - INFO - Starting roscore...
-2026-01-21 10:21:00,070 - INFO - Starting robot base...
-2026-01-21 10:21:02,075 - INFO - Launching keyboard control
-2026-01-21 10:21:44,148 - INFO - Keyboard control mode ended
-2026-01-21 10:22:01,446 - INFO - User selected menu option: 3
-2026-01-21 10:22:01,446 - INFO - Starting IMU Monitor Mode
-2026-01-21 10:22:01,446 - INFO - Starting roscore...
-2026-01-21 10:22:03,448 - INFO - Starting robot base...
-2026-01-21 10:22:05,451 - INFO - Starting IMU monitor with visible output
-2026-01-21 10:22:07,454 - INFO - Launching keyboard control
-2026-01-21 10:22:50,439 - INFO - IMU monitor mode ended
-2026-01-21 10:24:44,799 - INFO - User selected menu option: qq
-2026-01-21 10:24:44,799 - WARNING - Invalid choice: qq
-2026-01-21 10:24:58,006 - INFO - User selected menu option: 
-2026-01-21 10:24:58,007 - WARNING - Invalid choice: 
-2026-01-21 10:25:02,056 - INFO - User selected menu option: 
-2026-01-21 10:25:02,056 - WARNING - Invalid choice: 
-2026-01-21 10:25:13,959 - INFO - User selected menu option: 
-2026-01-21 10:25:13,960 - WARNING - Invalid choice: 
-2026-01-21 10:26:07,486 - INFO - User selected menu option: 
-2026-01-21 10:26:07,487 - WARNING - Invalid choice: 
-2026-01-21 10:26:13,742 - INFO - User selected menu option: 
-2026-01-21 10:26:13,742 - WARNING - Invalid choice: 
-2026-01-21 10:26:18,870 - INFO - User selected menu option: 
-2026-01-21 10:26:18,871 - WARNING - Invalid choice: 
-2026-01-21 10:26:24,047 - INFO - User selected menu option: 
-2026-01-21 10:26:24,047 - WARNING - Invalid choice: 
-2026-01-21 10:27:09,969 - INFO - User selected menu option: 
-2026-01-21 10:27:09,970 - WARNING - Invalid choice: 
-2026-01-21 10:28:05,703 - INFO - User selected menu option: 
-2026-01-21 10:28:05,703 - WARNING - Invalid choice: 
-2026-01-21 10:28:13,262 - INFO - User selected menu option: 
-2026-01-21 10:28:13,263 - WARNING - Invalid choice: 
-2026-01-21 10:28:20,373 - INFO - User selected menu option: 
-2026-01-21 10:28:20,373 - WARNING - Invalid choice: 
-2026-01-21 10:28:28,810 - INFO - User selected menu option: 
-2026-01-21 10:28:28,810 - WARNING - Invalid choice: 
-2026-01-21 10:28:36,393 - INFO - User selected menu option: 
-2026-01-21 10:28:36,393 - WARNING - Invalid choice: 
-2026-01-21 10:28:47,170 - INFO - Shutting down...
-2026-01-21 10:28:47,171 - INFO - Stopping robot movement
-2026-01-21 10:28:49,177 - WARNING - Failed to stop robot: Command '['docker', 'exec', 'jetracer_ros', 'bash', '-c', "source /root/catkin_ws/devel/setup.bash && rostopic pub /cmd_vel geometry_msgs/Twist '{linear: {x: 0, y: 0, z: 0}, angular: {x: 0, y: 0, z: 0}}' -1"]' timed out after 1.9999495669999305 seconds
-2026-01-21 10:28:49,178 - INFO - Shutdown complete

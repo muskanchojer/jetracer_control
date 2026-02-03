@@ -20,6 +20,11 @@ class CameraViewer:
         print("="*50)
         print("   Monitoring camera feed from /usb_cam/image_raw")
         print("")
+        print("   To VIEW the camera feed, open a NEW terminal and run:")
+        print("   docker exec -it jetracer_ros bash -c \\")
+        print("     'source /root/catkin_ws/devel/setup.bash && \\")
+        print("     rosrun image_view image_view image:=/usb_cam/image_raw'")
+        print("")
         print("   Press Ctrl+C to stop")
         print("="*50 + "\n")
         
