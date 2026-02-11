@@ -28,6 +28,11 @@ class PolicyNetwork:
     def _init_tinygrad(self):
         """Initialize tinygrad-based TinyNet policy"""
         try:
+            # Force GPU device for tinygrad
+            import os
+            os.environ['CUDA'] = '1'  # Enable CUDA
+            os.environ['GPU'] = '1'   # Enable GPU
+            
             from tinygrad.tensor import Tensor
             from tinygrad.nn.state import load_state_dict, safe_load
             

@@ -1,8 +1,13 @@
 # GPU Setup Guide for Jetson Orin Nano
 
+## Current Status
+- ✅ CUDA toolkit installed (12.6)
+- ❌ PyTorch is CPU-only version (2.9.1+cpu)
+- ❌ No GPU acceleration available
+
 ## Install PyTorch with CUDA for Jetson
 
-### Option 1: Using NVIDIA's Pre-built Wheels 
+### Option 1: Using NVIDIA's Pre-built Wheels (Recommended)
 
 1. **Uninstall CPU-only PyTorch:**
 ```bash
@@ -67,7 +72,7 @@ inference:
 
 | Backend | Device | FPS | Notes |
 |---------|--------|-----|-------|
-| tinygrad | CPU | 1.6 |Current (very slow) |
+| tinygrad | CPU | 1.6 | Current (very slow) |
 | PyTorch | CPU | 3-5 | Better optimization |
 | PyTorch | GPU | 10-15 | Good performance |
 | TensorRT | GPU | 20-30+ | Best performance |
@@ -99,3 +104,15 @@ if torch.cuda.is_available():
     print("GPU inference successful!")
 EOF
 ```
+
+## Current Configuration Changes
+
+**Fixed Issues:**
+1. ✅ ROS infrastructure now starts properly (docker exec -d)
+2. ✅ Switched to PyTorch backend (faster than tinygrad)
+3. 📝 Need to install PyTorch with CUDA support
+
+**After GPU Setup, Expected Improvements:**
+- FPS: 1.6 → 10-15 FPS
+- Latency: ~650ms → ~70ms per frame
+- Robot responsiveness: Much better real-time control

@@ -2,13 +2,17 @@
 """
 Vision module - YOLOv8 feature extraction for autonomous navigation
 Supports both PyTorch (ultralytics) and tinygrad implementations
+Optimized for Jetson Orin Nano with async processing
 """
 
 import os
 import sys
+import time
 import numpy as np
 import cv2
 import logging
+import threading
+import queue
 from pathlib import Path
 
 class VisionProcessor:
@@ -73,6 +77,11 @@ class VisionProcessor:
     def _init_tinygrad(self):
         """Initialize tinygrad-based YOLOv8 (lightweight, for edge devices)"""
         try:
+            # Force GPU device for tinygrad
+            import os
+            os.environ['CUDA'] = '1'  # Enable CUDA
+            os.environ['GPU'] = '1'   # Enable GPU
+            
             from tinygrad.tensor import Tensor
             from tinygrad.nn.state import load_state_dict, safe_load
             
@@ -170,6 +179,156 @@ class VisionProcessor:
             return self.extract_features_tinygrad(frame)
         else:
             return self.extract_features_pytorch(frame)
+
+
+class AsyncVisionProcessor:
+    """
+    Asynchronous vision processor that runs in a separate thread
+    Prevents vision processing from blocking the main control loop
+    """
+    
+    def __init__(self, vision_processor, policy_network, skip_frames=2):
+        """
+        Args:
+            vision_processor: VisionProcessor instance
+            policy_network: PolicyNetwork instance  
+            skip_frames: Process every Nth frame (1=all, 2=every other, etc.)
+        """
+        self.vision = vision_processor
+        self.policy = policy_network
+        self.skip_frames = max(1, skip_frames)
+        self.logger = logging.getLogger(__name__)
+        
+        # Thread-safe result storage
+        self._lock = threading.Lock()
+        self._latest_result = None
+        self._result_timestamp = 0
+        self._frame_count = 0
+        self._processed_count = 0
+        
+        # Processing queue and thread
+        self._input_queue = queue.Queue(maxsize=1)  # Only keep latest frame
+        self._running = False
+        self._thread = None
+        
+        # Performance tracking
+        self._processing_time = 0.0
+        self._fps = 0.0
+        self._last_fps_time = 0
+        self._fps_count = 0
+    
+    def start(self):
+        """Start the async processing thread"""
+        self._running = True
+        self._thread = threading.Thread(target=self._process_loop, daemon=True)
+        self._thread.start()
+        self.logger.info(f"Async vision processor started (skip_frames={self.skip_frames})")
+    
+    def stop(self):
+        """Stop the async processing thread"""
+        self._running = False
+        if self._thread:
+            self._thread.join(timeout=2.0)
+        self.logger.info("Async vision processor stopped")
+    
+    def submit_frame(self, frame):
+        """
+        Submit a frame for processing (non-blocking)
+        Returns immediately, result available via get_result()
+        """
+        self._frame_count += 1
+        
+        # Skip frames for performance
+        if self._frame_count % self.skip_frames != 0:
+            return
+        
+        # Replace any pending frame with the new one (drop old frames)
+        try:
+            # Clear the queue if not empty
+            while not self._input_queue.empty():
+                try:
+                    self._input_queue.get_nowait()
+                except queue.Empty:
+                    break
+            
+            # Add new frame
+            self._input_queue.put_nowait((frame.copy(), self._frame_count))
+        except queue.Full:
+            pass  # Drop frame if queue is full
+    
+    def _process_loop(self):
+        """Background processing loop"""
+        while self._running:
+            try:
+                # Wait for a frame with timeout
+                frame, frame_id = self._input_queue.get(timeout=0.1)
+                
+                start_time = time.time()
+                
+                # Process the frame
+                fpn_features = self.vision.process_frame(frame)
+                
+                if fpn_features is not None:
+                    # Run policy network
+                    action, confidence, probs = self.policy.predict(fpn_features)
+                    
+                    result = {
+                        'action': action,
+                        'confidence': confidence,
+                        'probs': probs,
+                        'frame_id': frame_id,
+                        'timestamp': time.time()
+                    }
+                    
+                    with self._lock:
+                        self._latest_result = result
+                        self._result_timestamp = result['timestamp']
+                        self._processed_count += 1
+                
+                # Update performance metrics
+                self._processing_time = time.time() - start_time
+                self._fps_count += 1
+                
+                now = time.time()
+                if now - self._last_fps_time >= 1.0:
+                    self._fps = self._fps_count / (now - self._last_fps_time)
+                    self._fps_count = 0
+                    self._last_fps_time = now
+                
+            except queue.Empty:
+                continue
+            except Exception as e:
+                self.logger.error(f"Vision processing error: {e}")
+    
+    def get_result(self, max_age=0.5):
+        """
+        Get the latest vision result (thread-safe)
+        
+        Args:
+            max_age: Maximum age of result in seconds (returns None if older)
+            
+        Returns:
+            dict with action, confidence, probs or None if no recent result
+        """
+        with self._lock:
+            if self._latest_result is None:
+                return None
+            
+            age = time.time() - self._result_timestamp
+            if age > max_age:
+                return None
+            
+            return self._latest_result.copy()
+    
+    def get_stats(self):
+        """Get processing statistics"""
+        return {
+            'fps': self._fps,
+            'processing_time_ms': self._processing_time * 1000,
+            'frames_submitted': self._frame_count,
+            'frames_processed': self._processed_count,
+            'skip_frames': self.skip_frames
+        }
     
     def get_camera_frame(self, camera_device='/dev/video0'):
         """Capture a single frame from camera"""
@@ -189,17 +348,28 @@ class VisionProcessor:
 
 
 class CameraStream:
-    """Continuous camera stream for real-time processing"""
+    """
+    Continuous camera stream for real-time processing
+    Optimized with threaded capture to prevent frame blocking
+    """
     
-    def __init__(self, device='/dev/video0', width=640, height=480):
+    def __init__(self, device='/dev/video0', width=640, height=480, buffer_size=2):
         self.device = device
         self.width = width
         self.height = height
+        self.buffer_size = buffer_size
         self.cap = None
         self.logger = logging.getLogger(__name__)
+        
+        # Threading for non-blocking capture
+        self._lock = threading.Lock()
+        self._frame = None
+        self._frame_id = 0
+        self._running = False
+        self._thread = None
     
     def start(self):
-        """Start camera stream"""
+        """Start camera stream with threaded capture"""
         self.cap = cv2.VideoCapture(self.device)
         if not self.cap.isOpened():
             self.logger.error(f"Cannot open camera: {self.device}")
@@ -209,19 +379,49 @@ class CameraStream:
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         
+        # Reduce buffer size to minimize latency
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, self.buffer_size)
+        
+        # Try to set higher FPS
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        
+        # Start capture thread
+        self._running = True
+        self._thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self._thread.start()
+        
         self.logger.info(f"Camera stream started: {self.device}")
         return True
     
+    def _capture_loop(self):
+        """Background thread for continuous frame capture"""
+        while self._running:
+            if self.cap is None or not self.cap.isOpened():
+                break
+            
+            ret, frame = self.cap.read()
+            if ret:
+                with self._lock:
+                    self._frame = frame
+                    self._frame_id += 1
+    
     def read(self):
-        """Read a frame from the stream"""
-        if self.cap is None or not self.cap.isOpened():
-            return None
-        
-        ret, frame = self.cap.read()
-        return frame if ret else None
+        """Read the latest frame (non-blocking)"""
+        with self._lock:
+            return self._frame.copy() if self._frame is not None else None
+    
+    def read_with_id(self):
+        """Read frame with its ID to detect new frames"""
+        with self._lock:
+            if self._frame is not None:
+                return self._frame.copy(), self._frame_id
+            return None, 0
     
     def stop(self):
         """Stop camera stream"""
+        self._running = False
+        if self._thread:
+            self._thread.join(timeout=1.0)
         if self.cap is not None:
             self.cap.release()
             self.logger.info("Camera stream stopped")

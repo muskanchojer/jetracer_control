@@ -5,13 +5,29 @@ models:
   yolov8_weights: "models/yolov8n.pt"  # PyTorch weights for inference
   yolov8_safetensors: "models/yolov8n.safetensors"  # Optional: tinygrad weights
   policy_model: "commabot/dollop-main/tinynet.safetensors"  # TinyNet policy weights
-  
+  direct_policy_model: "models/direct_policy.safetensors"  # DirectPolicyNet (no YOLOv8)
+
 # Vision settings
 vision:
   camera_width: 640
   camera_height: 480
   use_gpu: true
   device: "cuda"  # cuda or cpu
+  # Vision mode options:
+  #   'yolov8' - Original YOLOv8 + TinyNet (most accurate, slowest)
+  #   'direct' - DirectPolicyNet end-to-end (fastest, needs training)
+  #   'mobilenet' - MobileNetV3 + TinyNet (medium speed, TinyNet compatible)
+  mode: "mobilenet"  # Using MobileNetV3 - no retraining needed, ~3-4x faster than YOLOv8
+  
+  # MobileNet optimization settings
+  optimization:
+    mobilenet_input_size: 160   # Input resolution (160=fastest, 192=balanced, 224=original)
+    use_jit: true               # TorchScript JIT compilation (recommended)
+    use_tensorrt: false         # TensorRT conversion (install torch-tensorrt for best perf)
+  
+# Tinygrad settings (force GPU to avoid clang requirement)
+tinygrad:
+  device: "CUDA"  # Force CUDA/GPU instead of CPU
   
 # Control mapping (policy output to robot commands)
 control_mapping:
@@ -37,6 +53,66 @@ safety:
   
 # Inference settings
 inference:
-  use_tinygrad: true   # Use tinygrad (true) or PyTorch/ultralytics (false)
-  prediction_rate: 1   # Predictions per second (1 = one prediction per second, reduces load)
+  use_tinygrad: true  # Use tinygrad (true) or PyTorch/ultralytics (false)
+  prediction_rate: 5   # Predictions per second (1 = one prediction per second, reduces load)
   warmup_iterations: 3 # Number of warmup runs
+  vision_skip_frames: 3  # Process every Nth frame for vision (1=all, 3=every 3rd)
+  display_rate: 10       # Display update rate in Hz (lower = less CPU overhead)
+
+# Navigation settings (for goal-based control)
+navigation:
+  max_speed: 0.4              # Maximum forward speed (m/s)
+  min_speed: 0.1              # Minimum forward speed (m/s)
+  max_angular_speed: 1.5      # Maximum turning speed (rad/s)
+  waypoint_tolerance: 0.3     # Distance to consider waypoint "reached" (meters)
+  heading_tolerance: 0.2      # Heading error tolerance (radians, ~11 degrees)
+  lookahead_distance: 0.5     # Lookahead distance for path following (meters)
+  slowdown_distance: 1.0      # Start slowing down when this close to goal (meters)
+  control_rate: 20            # Navigation control loop rate in Hz (higher = more responsive)
+  
+  # Sensor fusion settings (IMU + odometry for waypoint detection)
+  use_sensor_fusion: true     # Enable IMU+odometry fusion for position estimation
+  odom_weight: 0.6            # Weight for wheel odometry (0-1)
+  imu_weight: 0.4             # Weight for IMU-integrated position (0-1)
+  min_confidence_for_waypoint: 0.5  # Minimum fusion confidence to confirm waypoint reached
+
+# Fusion controller settings (blend navigation + vision)
+fusion:
+  vision_weight: 0.7          # Weight for vision commands (0-1)
+  navigation_weight: 0.3      # Weight for navigation commands (0-1)
+  max_linear_speed: 0.5       # Maximum fused linear speed (m/s)
+  max_angular_speed: 1.5      # Maximum fused angular speed (rad/s)
+  obstacle_confidence_threshold: 0.6    # Confidence threshold to consider obstacle detected
+  critical_obstacle_threshold: 0.8      # Threshold for vision to completely override navigation
+
+# Homing settings (return-to-start with dead reckoning)
+homing:
+  # Return-to-home timing
+  return_interval_seconds: 240  # Return home every n minutes (n seconds)
+  home_tolerance: 0.3           # Distance to consider "home" (meters)
+  heading_tolerance: 0.2        # Heading tolerance for return navigation (radians)
+  
+  # Return journey speeds
+  return_speed: 0.3             # Forward speed when returning home (m/s)
+  turn_speed: 0.8               # Turn speed when returning home (rad/s)
+  
+  # Dead reckoning configuration
+  dead_reckoning:
+    enabled: true               # Enable dead reckoning position tracking
+    wheel_base: 0.20            # Distance between wheels (meters)
+    position_decay: 0.999       # Slight decay to reduce drift accumulation
+  
+  # Stuck detection configuration  
+  stuck_detection:
+    enabled: true               # Enable stuck detection and auto-recovery
+    threshold_distance: 0.05    # Minimum distance to move (meters) to not be "stuck"
+    check_interval: 1.0         # How often to check if stuck (seconds)
+    frames_threshold: 5         # Consecutive stuck checks before triggering recovery
+    max_recovery_commands: 10   # Maximum commands to reverse during recovery
+  
+  # Reversal/recovery maneuver settings
+  reversal:
+    reverse_speed: 0.2          # Speed when backing up (m/s)
+    turn_speed: 0.6             # Turn speed during escape (rad/s)
+    reverse_duration: 1.0       # How long to reverse (seconds)
+    turn_duration: 0.5          # How long to turn (seconds)

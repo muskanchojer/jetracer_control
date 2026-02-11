@@ -16,6 +16,11 @@ safetensors>=0.4.0  # For loading trained model weights
 # git clone https://github.com/tinygrad/tinygrad.git
 # cd tinygrad && python -m pip install -e .
 
+# ROS Python bindings (for goal-based navigation with ROS topics)
+# Install inside Docker container OR in venv if ROS is installed on host:
+# pip install rospkg catkin_pkg
+# Note: Full rospy requires ROS installation, use Docker exec for ROS commands
+
 # Video processing (for dollop compatibility)
 av>=10.0.0          # PyAV for video encoding/decoding
 
