@@ -1,0 +1,9 @@
+2026-02-12 17:57:00,858 - INFO - ======================================================================
+2026-02-12 17:57:00,858 - INFO - JetRacer Verbose IMU Monitor Started
+2026-02-12 17:57:00,858 - INFO - Log file: ~/jetracer_control/logs/jetracer_imu_verbose_20260212_175700.log
+2026-02-12 17:57:00,858 - INFO - ======================================================================
+2026-02-12 17:57:00,858 - INFO - Checking hardware...
+2026-02-12 17:57:00,858 - INFO - Robot connected at /dev/ttyACM0
+2026-02-12 17:57:00,859 - INFO - Checking Docker container: jetracer_ros
+2026-02-12 17:57:00,892 - ERROR - Docker container 'jetracer_ros' not found
+2026-02-12 17:57:00,892 - ERROR - Startup checks failed

@@ -1,0 +1,24 @@
+2026-02-12 18:04:27,837 - INFO - ======================================================================
+2026-02-12 18:04:27,837 - INFO - JetRacer Verbose IMU Monitor Started
+2026-02-12 18:04:27,838 - INFO - Log file: ~/jetracer_control/logs/jetracer_imu_verbose_20260212_180427.log
+2026-02-12 18:04:27,838 - INFO - ======================================================================
+2026-02-12 18:04:27,838 - INFO - Checking hardware...
+2026-02-12 18:04:27,838 - INFO - Robot connected at /dev/ttyACM0
+2026-02-12 18:04:27,838 - INFO - Checking Docker container: jetracer_ros
+2026-02-12 18:04:27,884 - INFO - Docker container 'jetracer_ros' is running
+2026-02-12 18:04:27,884 - INFO - Syncing custom scripts to Docker...
+2026-02-12 18:04:27,988 - INFO - Synced: imu_monitor.py
+2026-02-12 18:04:28,091 - INFO - Synced: imu_monitor_verbose.py
+2026-02-12 18:04:28,191 - INFO - Synced: imu_compass_visual.py
+2026-02-12 18:04:28,292 - INFO - Synced: imu_compass_ascii.py
+2026-02-12 18:04:28,394 - INFO - Synced: keyboard_control.py
+2026-02-12 18:04:28,499 - INFO - Synced: camera.py
+2026-02-12 18:04:28,499 - INFO - Synced 6 scripts
+2026-02-12 18:04:28,500 - INFO - Starting roscore...
+2026-02-12 18:04:30,503 - INFO - Starting robot base...
+2026-02-12 18:04:32,507 - INFO - Starting visual IMU compass...
+2026-02-12 18:04:32,512 - INFO - X11 access enabled for Docker
+2026-02-12 18:04:32,606 - WARNING - Cannot run graphical compass: OpenCV not available in Docker
+2026-02-12 18:04:32,607 - INFO - Falling back to ASCII compass
+2026-02-12 18:04:39,625 - INFO - Shutting down...
+2026-02-12 18:04:39,626 - INFO - Shutdown complete
