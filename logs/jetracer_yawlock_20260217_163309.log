@@ -1,0 +1,22 @@
+2026-02-17 16:33:09,904 - INFO - ============================================================
+2026-02-17 16:33:09,904 - INFO - JetRacer Yaw-Lock Control System Started
+2026-02-17 16:33:09,904 - INFO - Log file: ~/jetracer_control/logs/jetracer_yawlock_20260217_163309.log
+2026-02-17 16:33:09,904 - INFO - ============================================================
+2026-02-17 16:33:09,905 - INFO - Checking hardware...
+2026-02-17 16:33:09,905 - INFO - Robot connected at /dev/ttyACM0
+2026-02-17 16:33:09,905 - INFO - USB Camera found at /dev/video0
+2026-02-17 16:33:09,905 - INFO - Checking Docker container: jetracer_ros
+2026-02-17 16:33:09,948 - INFO - Docker container 'jetracer_ros' is running
+2026-02-17 16:33:09,948 - INFO - Syncing custom scripts to Docker...
+2026-02-17 16:33:10,065 - INFO - Synced: imu_monitor.py
+2026-02-17 16:33:10,174 - INFO - Synced: keyboard_control_yaw_lock.py
+2026-02-17 16:33:10,282 - INFO - Synced: imu_monitor_verbose.py
+2026-02-17 16:33:10,389 - INFO - Synced: imu_compass_visual.py
+2026-02-17 16:33:10,498 - INFO - Synced: imu_compass_ascii.py
+2026-02-17 16:33:10,608 - INFO - Synced: keyboard_control.py
+2026-02-17 16:33:10,719 - INFO - Synced: camera.py
+2026-02-17 16:33:10,720 - INFO - Synced 7 scripts
+2026-02-17 16:33:10,720 - INFO - Starting roscore...
+2026-02-17 16:33:12,722 - INFO - Starting robot base...
+2026-02-17 16:33:17,729 - INFO - Starting yaw-locked keyboard control
+2026-02-17 16:35:19,944 - INFO - Yaw-lock keyboard control ended
