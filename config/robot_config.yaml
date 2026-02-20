@@ -29,6 +29,42 @@ robot_params:
   pid_i: 120
   pid_d: 0
 
+# IMU Straight-Line PID Gains (yaw heading correction)
+imu_straight_line:
+  kp: 0.020        # proportional: per-degree yaw error → steering
+  ki: 0.002        # integral: removes persistent drift
+  kd: 0.005        # derivative: dampens oscillation
+  max_correction: 0.40   # max steering correction magnitude
+  max_integral: 30.0     # anti-windup limit (accumulated degree-error)
+  base_offset: -0.0445   # static steering bias from calibration
+
+# Ultimate Straight-Line Controller v2 (fused multi-sensor)
+ultimate_straight:
+  base_offset: -0.0445
+  # IMU yaw PID (primary correction, D-term uses gyroscope)
+  imu_kp: 0.12
+  imu_ki: 0.008
+  imu_kd: 0.05           # gyro-based D gain (rad/s → steer)
+  imu_max_correction: 0.45
+  imu_max_integral: 10.0          # reduced from 25 to prevent windup overshoot
+  imu_kd_max: 0.20
+  imu_integral_zone: 3.0          # only accumulate I when |error| < this (deg)
+  imu_integral_decay: 0.9         # shrink integral per tick when error outside zone
+  # Yaw spike filter (rejects IMU glitches)
+  max_yaw_rate_dps: 60.0          # max °/s robot can physically rotate
+  # Wheel-velocity PI (gated — only active when |yaw error| < gate)
+  whl_kp: 0.0004
+  whl_ki: 0.00001
+  whl_max_correction: 0.08
+  whl_max_integral: 5000.0
+  whl_gate_deg: 2.0
+  # Safety
+  error_warn_deg: 5.0
+  error_stop_deg: 15.0
+  # Combined output limit
+  total_max_steer: 0.50
+  loop_hz: 30
+
 # Feature Flags (enable/disable modules)
 features:
   keyboard_control: true
