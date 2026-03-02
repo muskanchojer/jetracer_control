@@ -1,334 +1,771 @@
 #!/usr/bin/env python3
 """
-JetRacer Unified Control System
-Main entry point with mode selection: Manual (keyboard) or Autonomous (AI)
+JetRacer Unified Controller
+============================
+Single entry point that merges all modes:
+  - Autonomous exploration with vision-based obstacle avoidance
+  - Automatic return-to-home every N minutes
+  - IMU + wheel straight-line correction on every command
+  - Inline WASD manual override with auto-resume
+  - Runtime home-point reset via 'H' key
+
+State machine:  AUTONOMOUS -> RETURNING_HOME -> AT_HOME -> AUTONOMOUS
+                     |                                      ^
+                     v                                      |
+               MANUAL_OVERRIDE  -----(idle timeout)--------+
+
+Usage:
+    python main.py                      # defaults
+    python main.py --no-check           # skip Docker check
+    python main.py --return-interval 60 # return home every 60s
 """
 
-import sys
 import os
+import sys
+import time
+import math
+import yaml
+import signal
 import logging
+import threading
+import subprocess
+import termios
+import tty
+import select
+from enum import Enum
 from datetime import datetime
 from pathlib import Path
-import mainv1 
-from mainv1 import JetRacerIntegrated
 
-def print_banner():
-    """Print startup banner"""
-    banner = """
-╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║           JetRacer Autonomous Control System              ║
-║                                                           ║
-║  🚗  Manual Mode      - Keyboard control (WASD)          ║
-║  🤖  Autonomous Mode  - AI vision (free roam)            ║
-║  🎯  Goal-Based Mode  - Navigation + Vision fusion       ║
-║  🏠  Homing Mode      - Auto return to start + recovery  ║
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
-    """
-    print(banner)
+# ---------------------------------------------------------------------------
+# Imports from auto/ modules
+# ---------------------------------------------------------------------------
+from auto.ros_bridge import ROSTopicBridge
+from auto.control_adapter import ControlAdapter, SafetyMonitor
+from auto.navigation import WaypointNavigator
+from auto.fusion_controller import FusionController, VisionCommand
+from auto.homing_controller import HomingController, HomingMode
+from auto.straight_line_corrector import quaternion_to_yaw_deg
+from auto.display import DisplayWindow
+from auto.exploration import ExplorationStrategy
 
-def select_mode():
-    """Interactive mode selection"""
-    print("\nSelect control mode:")
-    print("  1. Manual (Keyboard Control)")
-    print("  2. Autonomous (AI Vision - Free Roam)")
-    print("  3. Goal-Based (Navigation + Vision)")
-    print("  4. Homing (Autonomous + Return to Start)")
-    print("  5. Exit")
-    
-    while True:
+
+# ---------------------------------------------------------------------------
+# State enum
+# ---------------------------------------------------------------------------
+class RobotState(Enum):
+    AUTONOMOUS = "autonomous"
+    RETURNING_HOME = "returning_home"
+    AT_HOME = "at_home"
+    MANUAL_OVERRIDE = "manual_override"
+
+
+# ---------------------------------------------------------------------------
+# Non-blocking keyboard input (threaded)
+# ---------------------------------------------------------------------------
+class KeyboardHandler:
+    """Threaded non-blocking keyboard reader for same-terminal WASD control."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._latest_key = None
+        self._running = False
+        self._thread = None
+        self._old_settings = None
+
+    def start(self):
+        if not sys.stdin.isatty():
+            return
+        self._old_settings = termios.tcgetattr(sys.stdin)
+        self._running = True
+        self._thread = threading.Thread(target=self._read_loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+        if self._old_settings is not None:
+            try:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._old_settings)
+            except Exception:
+                pass
+        if self._thread:
+            self._thread.join(timeout=1.0)
+
+    def poll(self):
+        """Return the latest key and clear it. Returns None if no key."""
+        with self._lock:
+            k = self._latest_key
+            self._latest_key = None
+            return k
+
+    def _read_loop(self):
         try:
-            choice = input("\nEnter choice (1-5): ").strip()
-            
-            if choice == '1':
-                return 'manual'
-            elif choice == '2':
-                return 'autonomous'
-            elif choice == '3':
-                return 'goal_based'
-            elif choice == '4':
-                return 'homing'
-            elif choice == '5':
-                return 'exit'
+            while self._running:
+                if select.select([sys.stdin], [], [], 0.05)[0]:
+                    tty.setraw(sys.stdin.fileno())
+                    ch = sys.stdin.read(1)
+                    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._old_settings)
+                    if ch == '\x1b':
+                        # skip escape sequences
+                        if select.select([sys.stdin], [], [], 0.01)[0]:
+                            sys.stdin.read(2)
+                        continue
+                    with self._lock:
+                        self._latest_key = ch
+        except Exception:
+            pass
+
+
+# ---------------------------------------------------------------------------
+# Unified Controller
+# ---------------------------------------------------------------------------
+class UnifiedController:
+    """
+    Merges autonomous exploration, homing, straight-line correction,
+    and manual override into a single control loop.
+    """
+
+    def __init__(self, return_interval=None, no_check=False):
+        self.running = False
+        self.setup_logging()
+        self.load_config()
+
+        # Override return interval from CLI if given
+        if return_interval is not None:
+            self.config.setdefault('homing', {})['return_interval_seconds'] = return_interval
+
+        self.no_check = no_check
+
+        # --- unified controller params ---
+        uc = self.config.get('unified_controller', {})
+        self.manual_timeout = uc.get('manual_override_timeout', 3.0)
+        self.home_pause = uc.get('home_pause_seconds', 2.0)
+        self.status_hz = uc.get('status_display_hz', 2)
+
+        # --- state ---
+        self.state = RobotState.AUTONOMOUS
+        self.last_manual_time = 0.0
+        self.home_arrival_time = 0.0
+
+        # Current manual velocities
+        self.manual_linear = 0.0
+        self.manual_angular = 0.0
+
+        # Speed settings
+        ctrl = self.robot_config.get('control', {})
+        self.linear_speed = ctrl.get('default_linear_speed', 0.3)
+        self.angular_speed = ctrl.get('default_angular_speed', 0.8)
+
+        # --- components ---
+        use_tinygrad = self.config.get('inference', {}).get('use_tinygrad', True)
+        vision_mode = self.config.get('vision', {}).get('mode', 'mobilenet')
+
+        self.logger.info("=" * 60)
+        self.logger.info("Initializing Unified JetRacer Controller")
+        self.logger.info(f"Vision: {vision_mode} | Backend: {'tinygrad' if use_tinygrad else 'PyTorch'}")
+        self.logger.info("=" * 60)
+
+        # ROS bridge
+        self.ros_bridge = ROSTopicBridge()
+
+        # Control adapter (with integrated straight-line corrector)
+        self.control = ControlAdapter(self.config)
+        self.control.set_ros_bridge(self.ros_bridge)
+
+        # Navigator
+        self.navigator = WaypointNavigator(self.config)
+
+        # Fusion controller
+        self.fusion = FusionController(self.config)
+
+        # Homing controller
+        self.homing = HomingController(self.config)
+
+        # Safety monitor
+        self.safety = SafetyMonitor(self.config)
+
+        # Vision + policy (lazy-loaded in _init_vision)
+        self.vision = None
+        self.policy = None
+        self.evaluator = None
+        self.camera = None
+        self.lightweight_vision = None
+        self.use_lightweight = False
+        self._vision_mode = vision_mode
+        self._use_tinygrad = use_tinygrad
+
+        # Last vision prediction
+        self.last_action = 'straight'
+        self.last_confidence = 0.0
+        self.last_frame = None
+
+        # Display window
+        cam_w = self.config.get('vision', {}).get('camera_width', 640)
+        cam_h = self.config.get('vision', {}).get('camera_height', 480)
+        self.display = DisplayWindow(self.config, width=cam_w, height=cam_h)
+
+        # Exploration strategy (gives autonomous mode purpose)
+        self.explorer = ExplorationStrategy(self.config)
+
+        # Keyboard handler
+        self.keyboard = KeyboardHandler()
+
+        # Signal handlers
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+    # ------------------------------------------------------------------
+    # Setup helpers
+    # ------------------------------------------------------------------
+
+    def setup_logging(self):
+        log_dir = Path(__file__).parent / "logs"
+        log_dir.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_file = log_dir / f"unified_{ts}.log"
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
+        )
+        self.logger = logging.getLogger("unified")
+        self.logger.info(f"Log file: {log_file}")
+
+    def load_config(self):
+        config_dir = Path(__file__).parent / "config"
+        with open(config_dir / "robot_config.yaml") as f:
+            self.robot_config = yaml.safe_load(f)
+        with open(config_dir / "autonomous_config.yaml") as f:
+            self.config = yaml.safe_load(f)
+        # Merge robot_params into config so corrector can read wheel_base etc.
+        self.config['robot_params'] = self.robot_config.get('robot_params', {})
+
+    def _init_vision(self):
+        """Lazy-initialize vision pipeline (heavy imports)."""
+        from auto.vision import VisionProcessor, CameraStream
+        from auto.policy import PolicyNetwork, PolicyEvaluator
+
+        if self._vision_mode == 'direct':
+            from auto.lightweight_vision import LightweightVisionProcessor
+            self.lightweight_vision = LightweightVisionProcessor(
+                self.config, mode='direct', use_tinygrad=self._use_tinygrad)
+            self.use_lightweight = True
+            self.logger.info("Vision: DirectPolicyNet (end-to-end)")
+        elif self._vision_mode == 'mobilenet':
+            from auto.lightweight_vision import LightweightVisionProcessor
+            self.lightweight_vision = LightweightVisionProcessor(
+                self.config, mode='mobilenet', use_tinygrad=False)
+            self.policy = PolicyNetwork(self.config, use_tinygrad=self._use_tinygrad)
+            self.use_lightweight = True
+            self.logger.info("Vision: MobileNetV3 + TinyNet")
+        else:
+            self.vision = VisionProcessor(self.config, use_tinygrad=self._use_tinygrad)
+            self.policy = PolicyNetwork(self.config, use_tinygrad=self._use_tinygrad)
+            self.logger.info("Vision: YOLOv8 + TinyNet")
+
+        self.evaluator = PolicyEvaluator(self.config)
+
+        cam_dev = self.robot_config['hardware']['camera_device']
+        cam_w = self.config['vision']['camera_width']
+        cam_h = self.config['vision']['camera_height']
+        self.camera = CameraStream(device=cam_dev, width=cam_w, height=cam_h)
+        self.camera.start()
+        self.logger.info("Camera started")
+
+    # ------------------------------------------------------------------
+    # Prerequisites
+    # ------------------------------------------------------------------
+
+    def check_docker(self):
+        try:
+            r = subprocess.run(
+                ["docker", "ps", "--filter", "name=jetracer_ros", "--format", "{{.Names}}"],
+                capture_output=True, text=True, timeout=5)
+            if "jetracer_ros" in r.stdout:
+                print("  Docker container running")
+                return True
+            print("  Docker container 'jetracer_ros' not running")
+            print("  Start with: ~/start_jetracer_docker.sh")
+            return False
+        except Exception as e:
+            print(f"  Docker check error: {e}")
+            return False
+
+    def start_ros_infra(self):
+        """Ensure roscore + robot base are up."""
+        try:
+            r = subprocess.run(
+                ["docker", "exec", "jetracer_ros", "bash", "-c",
+                 "source /root/catkin_ws/devel/setup.bash && rostopic list"],
+                capture_output=True, timeout=3)
+            if r.returncode == 0:
+                self.logger.info("ROS master already running")
+                return
+        except Exception:
+            pass
+
+        print("  Starting ROS core ...")
+        subprocess.run(
+            ["docker", "exec", "-d", "jetracer_ros", "bash", "-c",
+             "source /root/catkin_ws/devel/setup.bash && roscore"], check=False)
+        time.sleep(3)
+        print("  Starting robot base ...")
+        subprocess.run(
+            ["docker", "exec", "-d", "jetracer_ros", "bash", "-c",
+             "source /root/catkin_ws/devel/setup.bash && rosrun jetracer jetracer"], check=False)
+        time.sleep(2)
+        print("  ROS infrastructure ready")
+
+    # ------------------------------------------------------------------
+    # Vision prediction
+    # ------------------------------------------------------------------
+
+    def _predict_action(self, frame):
+        """Run vision pipeline on a camera frame. Returns (action, confidence)."""
+        if frame is None:
+            return self.last_action, 0.0
+
+        try:
+            if self.use_lightweight:
+                if self.lightweight_vision is not None:
+                    if self._vision_mode == 'direct':
+                        action, confidence, _ = self.lightweight_vision.predict(frame)
+                    else:
+                        features = self.lightweight_vision.process_frame(frame)
+                        if features is None:
+                            return self.last_action, 0.0
+                        action, confidence, _ = self.policy.predict(features)
+                else:
+                    return self.last_action, 0.0
             else:
-                print("Invalid choice. Please enter 1-5.")
-        
-        except KeyboardInterrupt:
-            print("\n\nExiting...")
-            return 'exit'
-        except EOFError:
-            return 'exit'
+                features = self.vision.process_frame(frame)
+                if features is None:
+                    return self.last_action, 0.0
+                action, confidence, _ = self.policy.predict(features)
+        except Exception as e:
+            self.logger.debug(f"Vision error: {e}")
+            return self.last_action, 0.0
 
-def check_docker():
-    """Check if Docker container is running"""
-    import subprocess
-    
-    container = "jetracer_ros"
-    
-    try:
-        result = subprocess.run(
-            ["docker", "ps", "--filter", f"name={container}", "--format", "{{.Names}}"],
-            capture_output=True,
-            text=True,
-            timeout=5.0
-        )
-        
-        if container in result.stdout:
-            print(f"✅ Docker container '{container}' is running")
+        self.last_action = action
+        self.last_confidence = confidence
+        return action, confidence
+
+    # ------------------------------------------------------------------
+    # Keyboard handling
+    # ------------------------------------------------------------------
+
+    def _handle_key(self, key):
+        """Process a single key press. Returns True if robot should quit."""
+        k = key.lower()
+
+        if k == 'q' or key == '\x03':
             return True
-        else:
-            print(f"\n❌ Docker container '{container}' is not running")
-            print(f"Start it with: ~/start_jetracer_docker.sh\n")
+
+        now = time.time()
+
+        # Manual movement keys
+        if k in ('w', 'a', 's', 'd', ' '):
+            if k == 'w':
+                self.manual_linear = self.linear_speed
+                self.manual_angular = 0.0
+            elif k == 's':
+                self.manual_linear = -self.linear_speed
+                self.manual_angular = 0.0
+            elif k == 'a':
+                self.manual_linear = 0.0
+                self.manual_angular = self.angular_speed
+            elif k == 'd':
+                self.manual_linear = 0.0
+                self.manual_angular = -self.angular_speed
+            elif k == ' ':
+                self.manual_linear = 0.0
+                self.manual_angular = 0.0
+
+            self.last_manual_time = now
+            if self.state != RobotState.MANUAL_OVERRIDE:
+                self.state = RobotState.MANUAL_OVERRIDE
+                self.logger.info("Manual override activated")
             return False
-    
-    except Exception as e:
-        print(f"❌ Error checking Docker: {e}")
-        return False
 
-def run_manual_mode():
-    """Run manual keyboard control mode"""
-    print("\n" + "="*60)
-    print("Starting Manual Control Mode (Keyboard)")
-    print("="*60 + "\n")
-    
-    # Import and run keyboard control from main_old.py
-    try:
-        # Use the existing keyboard control implementation
-        
-        robot = JetRacerIntegrated()
-        
-        if not robot.check_docker():
-            print("Please start Docker first")
+        # Home reset
+        if k == 'h':
+            x, y, theta = self.navigator.get_position()
+            self.homing.set_home(x, y, theta)
+            print(f"\n  Home reset to ({x:.2f}, {y:.2f})")
             return False
-        
-        if not robot.check_hardware():
-            print("Hardware check failed")
-            return False
-        
-        robot.sync_scripts()
-        
-        # Ask if user wants camera window
-        print("\nShow camera window? (y/n): ", end='', flush=True)
-        show_camera = input().strip().lower() == 'y'
-        
-        # Start keyboard control (this will start roscore and robot_base first)
-        print("\n🎮 Keyboard control active")
-        print("Controls: W=forward, A=left, S=backward, D=right, Space=stop, Q=quit")
-        
-        if show_camera:
-            print("📷 Camera window enabled\n")
-            # Start with camera
-            robot.run()  # Full integration mode
-        else:
-            print("\n")
-            # Keyboard only
-            robot.start_keyboard_control()
-        
-    except ImportError as e:
-        print(f"❌ Failed to import keyboard control: {e}")
-        return False
-    except Exception as e:
-        print(f"❌ Error in manual mode: {e}")
-        return False
-    
-    return True
 
-def run_autonomous_mode():
-    """Run autonomous AI navigation mode (free roam - no goal)"""
-    print("\n" + "="*60)
-    print("Starting Autonomous Mode (AI Vision - Free Roam)")
-    print("="*60 + "\n")
-    
-    try:
-        from scripts.autonomous_control import AutonomousController
-        
-        controller = AutonomousController()
-        return controller.run()
-    
-    except ImportError as e:
-        print(f"❌ Failed to import autonomous controller: {e}")
-        print("\nMake sure required packages are installed:")
-        print("  pip install ultralytics opencv-python numpy pyyaml")
-        return False
-    except Exception as e:
-        print(f"❌ Error in autonomous mode: {e}")
-        import traceback
-        traceback.print_exc()
+        # Speed adjust
+        if key in ('+', '='):
+            self.linear_speed = min(self.linear_speed + 0.05, 1.0)
+            self.angular_speed = min(self.angular_speed + 0.1, 2.0)
+            print(f"\n  Speed up: L={self.linear_speed:.2f} A={self.angular_speed:.2f}")
+        elif key in ('-', '_'):
+            self.linear_speed = max(self.linear_speed - 0.05, 0.1)
+            self.angular_speed = max(self.angular_speed - 0.1, 0.2)
+            print(f"\n  Speed down: L={self.linear_speed:.2f} A={self.angular_speed:.2f}")
+
         return False
 
-def run_goal_based_mode():
-    """Run goal-based navigation mode (navigation + vision fusion)"""
-    print("\n" + "="*60)
-    print("Starting Goal-Based Mode (Navigation + Vision)")
-    print("="*60 + "\n")
-    
-    try:
-        from scripts.goal_based_control import GoalBasedController
-        
-        # Get goal from user
-        print("Set navigation goal:")
-        print("  Example: 2.0,1.5 means 2 meters forward, 1.5 meters left")
-        print("  Or press Enter to set goal programmatically in code")
-        
-        goal_input = input("\nEnter goal (x,y in meters) or press Enter: ").strip()
-        
-        controller = GoalBasedController()
-        
-        if goal_input:
-            try:
-                x, y = map(float, goal_input.split(','))
-                controller.set_goal(x, y)
-            except ValueError:
-                print("❌ Invalid goal format. Using vision-only mode.")
-        else:
-            print("\n💡 No goal set. You can set goals programmatically:")
-            print("   controller.set_goal(x, y)")
-            print("   controller.set_waypoints([(x1,y1), (x2,y2), ...])")
-            print("\nStarting in vision-only mode (free roam)...")
-        
-        return controller.run()
-    
-    except ImportError as e:
-        print(f"❌ Failed to import goal-based controller: {e}")
-        print("\nMake sure required packages are installed:")
-        print("  pip install ultralytics opencv-python numpy pyyaml")
-        return False
-    except Exception as e:
-        print(f"❌ Error in goal-based mode: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+    # ------------------------------------------------------------------
+    # State transitions
+    # ------------------------------------------------------------------
 
+    def _maybe_resume_autonomous(self):
+        """Resume autonomous after manual idle timeout."""
+        if self.state != RobotState.MANUAL_OVERRIDE:
+            return
+        if time.time() - self.last_manual_time >= self.manual_timeout:
+            self.state = RobotState.AUTONOMOUS
+            self.manual_linear = 0.0
+            self.manual_angular = 0.0
+            self.logger.info("Manual idle timeout -> autonomous")
 
-def run_homing_mode():
-    """Run homing mode (autonomous + return to start every N minutes)"""
-    print("\n" + "="*60)
-    print("Starting Homing Mode (Autonomous + Return to Start)")
-    print("="*60 + "\n")
-    
-    print("📍 Homing Mode Features:")
-    print("   - Autonomous AI vision navigation (same as Autonomous mode)")
-    print("   - Tracks position using dead reckoning")
-    print("   - Returns to start every N minutes (configurable)")
-    print("   - Detects when stuck and auto-recovers")
-    print("   - Press 'H' anytime to force return home\n")
-    
-    try:
-        # Load config to get default interval
-        import yaml
-        config_path = Path(__file__).parent / "config" / "autonomous_config.yaml"
-        with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
-        
-        default_interval = config.get('homing', {}).get('return_interval_seconds', 120)
-        
-        # Ask for return interval
-        print(f"Return interval (seconds)? [default: {default_interval}]")
-        interval_input = input("Enter interval or press Enter for default: ").strip()
-        
-        if interval_input:
-            try:
-                return_interval = int(interval_input)
-            except ValueError:
-                print(f"Invalid number, using default: {default_interval}s")
-                return_interval = default_interval
-        else:
-            return_interval = default_interval
-        
-        # Ask about stuck detection
-        print("\nEnable stuck detection and auto-recovery? [Y/n]: ", end='')
-        stuck_input = input().strip().lower()
-        enable_stuck = stuck_input != 'n'
-        
-        print(f"\n🏠 Will return home every {return_interval/60:.1f} minutes")
-        print(f"🔧 Stuck recovery: {'enabled' if enable_stuck else 'disabled'}\n")
-        
-        from scripts.homing_control import HomingAutonomousController
-        
-        controller = HomingAutonomousController(
-            return_interval=return_interval,
-            enable_stuck_detection=enable_stuck
+    def _maybe_return_home(self):
+        """Check if it's time to go home."""
+        if self.state != RobotState.AUTONOMOUS:
+            return
+        if self.homing.check_should_return_home():
+            hx, hy, _ = self.homing.get_home()
+            self.navigator.set_goal(hx, hy)
+            self.homing.start_return_home()
+            self.state = RobotState.RETURNING_HOME
+            self.logger.info(f"Time to return home -> ({hx:.2f}, {hy:.2f})")
+
+    def _check_home_arrival(self):
+        """While RETURNING_HOME, check whether we've arrived."""
+        if self.state != RobotState.RETURNING_HOME:
+            return
+        hx, hy, _ = self.homing.get_home()
+        dist = self.navigator.distance_to(hx, hy)
+        tolerance = self.config.get('homing', {}).get('home_tolerance', 0.3)
+        if dist < tolerance:
+            self.state = RobotState.AT_HOME
+            self.home_arrival_time = time.time()
+            self.homing.mark_home_reached()
+            self.navigator.clear_waypoints()
+            self.control.stop()
+            self.logger.info("Arrived home")
+
+    def _check_home_pause_done(self):
+        """After AT_HOME pause, resume exploration."""
+        if self.state != RobotState.AT_HOME:
+            return
+        if time.time() - self.home_arrival_time >= self.home_pause:
+            self.homing.resume_exploration()
+            self.state = RobotState.AUTONOMOUS
+            self.logger.info("Home pause done -> autonomous")
+
+    # ------------------------------------------------------------------
+    # Stuck recovery (during RETURNING_HOME)
+    # ------------------------------------------------------------------
+
+    def _check_stuck(self):
+        if self.state != RobotState.RETURNING_HOME:
+            return
+        if self.homing.is_stuck():
+            self.logger.warning("Robot appears stuck - running recovery")
+            if self.homing.start_stuck_recovery():
+                while True:
+                    cmd = self.homing.get_next_recovery_command()
+                    if cmd is None:
+                        break
+                    self.control.send_velocity_command(
+                        cmd.linear_velocity, cmd.angular_velocity)
+                    time.sleep(cmd.duration)
+                self.control.stop()
+                # Re-set goal after recovery
+                hx, hy, _ = self.homing.get_home()
+                self.navigator.set_goal(hx, hy)
+
+    # ------------------------------------------------------------------
+    # Status display
+    # ------------------------------------------------------------------
+
+    def _print_status(self):
+        x, y, theta = self.navigator.get_position()
+        hx, hy, _ = self.homing.get_home()
+        dist_home = math.sqrt((x - hx) ** 2 + (y - hy) ** 2)
+        ttr = self.homing.get_time_until_return()
+        corr = self.control.corrector.get_status()
+        err_str = f"err:{corr['yaw_error']:+5.1f}d" if corr['locked'] else "free"
+
+        line = (
+            f"\r  [{self.state.value:^16s}] "
+            f"pos:({x:+5.2f},{y:+5.2f}) th:{math.degrees(theta):+6.1f}d | "
+            f"home:({hx:+5.2f},{hy:+5.2f}) dist:{dist_home:4.2f}m | "
+            f"act:{self.last_action:>8s} c:{self.last_confidence:.2f} | "
+            f"IMU:{err_str} | "
+            f"ret:{ttr:5.0f}s"
         )
-        return controller.run()
-    
-    except ImportError as e:
-        print(f"❌ Failed to import homing controller: {e}")
-        print("\nMake sure required packages are installed:")
-        print("  pip install ultralytics opencv-python numpy pyyaml")
-        return False
-    except Exception as e:
-        print(f"❌ Error in homing mode: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        print(f"{line:<160}", end="", flush=True)
+
+    def _update_display(self, linear, angular):
+        """Push current state into the camera display window."""
+        x, y, theta = self.navigator.get_position()
+        hx, hy, _ = self.homing.get_home()
+        dist_home = math.sqrt((x - hx) ** 2 + (y - hy) ** 2)
+        ttr = self.homing.get_time_until_return()
+        corr = self.control.corrector.get_status()
+
+        # Grab latest frame for display (use cached last_frame)
+        frame = self.last_frame
+        if frame is None and self.camera:
+            frame = self.camera.read()
+
+        self.display.update(
+            frame,
+            state=self.state.value,
+            action=self.last_action,
+            confidence=self.last_confidence,
+            pos=(x, y, theta),
+            home=(hx, hy),
+            dist_home=dist_home,
+            linear=linear,
+            angular=angular,
+            imu_locked=corr['locked'],
+            imu_yaw_err=corr.get('yaw_error', 0.0),
+            time_to_return=ttr,
+        )
+
+    # ------------------------------------------------------------------
+    # Main loop
+    # ------------------------------------------------------------------
+
+    def run(self):
+        # Pre-flight
+        if not self.no_check:
+            if not self.check_docker():
+                return False
+        self.start_ros_infra()
+
+        # Start ROS bridge
+        self.ros_bridge.start()
+        time.sleep(1)
+
+        # Initialize navigator ROS connection
+        self.navigator.initialize_ros()
+
+        # Initialize vision
+        self._init_vision()
+
+        # Start homing session
+        self.homing.start_session()
+
+        # Lock heading to current IMU yaw for straight-line correction
+        imu_yaw, _, _ = self.ros_bridge.get_imu_yaw_gyro()
+        self.control.corrector.lock_heading(imu_yaw)
+
+        # Safety monitor
+        self.safety.start()
+
+        # Keyboard
+        self.keyboard.start()
+
+        # Display window
+        self.display.start()
+
+        self.running = True
+        prediction_interval = 1.0 / self.config.get('inference', {}).get('prediction_rate', 5)
+        last_pred_time = 0.0
+        last_status_time = 0.0
+        status_interval = 1.0 / max(self.status_hz, 0.5)
+
+        self._print_banner()
+
+        try:
+            while self.running:
+                loop_start = time.time()
+
+                # ---- Keyboard ----
+                key = self.keyboard.poll()
+                if key is not None:
+                    if self._handle_key(key):
+                        break
+
+                # ---- State transitions ----
+                self._maybe_resume_autonomous()
+                self._maybe_return_home()
+                self._check_home_arrival()
+                self._check_home_pause_done()
+                self._check_stuck()
+
+                # ---- Compute command based on state ----
+                linear = 0.0
+                angular = 0.0
+                is_turning = False
+
+                if self.state == RobotState.MANUAL_OVERRIDE:
+                    linear = self.manual_linear
+                    angular = self.manual_angular
+                    is_turning = abs(angular) > 0.1
+                    # Grab frame for display (no vision inference)
+                    if self.camera and loop_start - last_pred_time >= prediction_interval:
+                        self.last_frame = self.camera.read()
+                        last_pred_time = loop_start
+
+                elif self.state == RobotState.AUTONOMOUS:
+                    # Vision prediction (throttled)
+                    if loop_start - last_pred_time >= prediction_interval:
+                        frame = self.camera.read() if self.camera else None
+                        self.last_frame = frame
+                        action, confidence = self._predict_action(frame)
+                        last_pred_time = loop_start
+
+                        if self.evaluator and self.evaluator.should_execute(action, confidence):
+                            self.last_action = action
+                            self.last_confidence = confidence
+                            self.safety.log_action(action)
+
+                    # Convert last action to velocities
+                    linear, angular = self.control.action_to_velocity(self.last_action)
+                    is_turning = self.last_action in ('left', 'right')
+
+                    # Exploration: steer toward unvisited frontier
+                    ex, ey, eth = self.navigator.get_position()
+                    self.explorer.update(ex, ey, eth)
+                    angular = self.explorer.compute_angular_bias(
+                        self.last_action, self.last_confidence, linear, angular)
+                    is_turning = is_turning or abs(angular) > 0.3
+
+                elif self.state == RobotState.RETURNING_HOME:
+                    # Use navigator for heading toward home
+                    nav_cmd = self.navigator.get_navigation_command()
+
+                    # Also get vision for obstacle avoidance
+                    if loop_start - last_pred_time >= prediction_interval:
+                        frame = self.camera.read() if self.camera else None
+                        self.last_frame = frame
+                        action, confidence = self._predict_action(frame)
+                        last_pred_time = loop_start
+
+                    vision_cmd = VisionCommand(
+                        action=self.last_action,
+                        confidence=self.last_confidence,
+                        obstacle_detected=(self.last_action in ('left', 'right', 'reverse')
+                                           and self.last_confidence > 0.5),
+                    )
+
+                    x, y, theta = self.navigator.get_position()
+                    fused = self.fusion.fuse_commands(nav_cmd, vision_cmd, theta)
+                    linear = fused.linear_x
+                    angular = fused.angular_z
+                    is_turning = abs(angular) > 0.3
+
+                    # Record for homing dead-reckoning
+                    self.homing.record_command(linear, angular)
+
+                elif self.state == RobotState.AT_HOME:
+                    linear = 0.0
+                    angular = 0.0
+
+                # ---- Update heading lock ----
+                if self.state in (RobotState.AUTONOMOUS, RobotState.RETURNING_HOME):
+                    if not self.control.corrector.is_locked():
+                        imu_yaw, _, _ = self.ros_bridge.get_imu_yaw_gyro()
+                        self.control.corrector.lock_heading(imu_yaw)
+                elif self.state == RobotState.MANUAL_OVERRIDE:
+                    # Re-lock heading when driving straight
+                    if abs(self.manual_linear) > 0.01 and abs(self.manual_angular) < 0.01:
+                        if not self.control.corrector.is_locked():
+                            imu_yaw, _, _ = self.ros_bridge.get_imu_yaw_gyro()
+                            self.control.corrector.lock_heading(imu_yaw)
+                    elif abs(self.manual_angular) > 0.01:
+                        self.control.corrector.unlock_heading()
+
+                # ---- Send command (with correction) ----
+                if self.state != RobotState.AT_HOME:
+                    self.control.send_corrected_command(linear, angular, is_turning=is_turning)
+
+                # ---- Display + Status line ----
+                if loop_start - last_status_time >= status_interval:
+                    self._print_status()
+                    self._update_display(linear, angular)
+                    last_status_time = loop_start
+
+                # Safety timeout
+                if self.safety.check_timeout():
+                    self.logger.warning("Safety timeout")
+                    break
+
+                # Loop pacing (~30 Hz)
+                elapsed = time.time() - loop_start
+                sleep_time = max(0.0, (1.0 / 30.0) - elapsed)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
+        except Exception as e:
+            self.logger.error(f"Error in main loop: {e}", exc_info=True)
+        finally:
+            self.shutdown()
+
+        return True
+
+    # ------------------------------------------------------------------
+    # Shutdown
+    # ------------------------------------------------------------------
+
+    def shutdown(self, signum=None, frame=None):
+        if not self.running:
+            return
+        self.running = False
+        print("\n\n  Shutting down ...")
+        self.control.stop()
+        self.keyboard.stop()
+        self.display.stop()
+        if self.camera:
+            self.camera.stop()
+        self.ros_bridge.stop()
+        self.homing.stop_session()
+        stats = self.safety.get_statistics()
+        if stats:
+            self.logger.info(f"Session stats: {stats}")
+        self.logger.info("Shutdown complete")
+        print("  Robot stopped.\n")
+
+    def _signal_handler(self, signum, frame):
+        self.shutdown()
+
+    # ------------------------------------------------------------------
+    # Banner
+    # ------------------------------------------------------------------
+
+    def _print_banner(self):
+        ret = self.config.get('homing', {}).get('return_interval_seconds', 240)
+        print(f"""
+======================================================
+       JetRacer Unified Controller
+======================================================
+  WASD  = manual override (auto-resumes after {self.manual_timeout:.0f}s)
+  H     = set / reset home to current position
+  SPACE = stop          +/- = adjust speed
+  Q     = quit
+
+  Returning home every {ret}s ({ret/60:.1f} min)
+  IMU straight-line correction: active
+  Exploration: frontier-based (visited-cell tracking)
+  Camera display window: active
+======================================================
+""")
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 def main():
-    """Main entry point"""
     import argparse
-    
-    parser = argparse.ArgumentParser(description='JetRacer Control System')
-    parser.add_argument('--mode', choices=['manual', 'autonomous', 'goal_based', 'homing'], 
-                       help='Control mode (skip interactive selection)')
+    parser = argparse.ArgumentParser(description='JetRacer Unified Controller')
+    parser.add_argument('--return-interval', type=int, default=None,
+                        help='Return home interval in seconds (default: from config)')
     parser.add_argument('--no-check', action='store_true',
-                       help='Skip Docker check')
-    parser.add_argument('--goal', type=str, 
-                       help='Goal coordinates for goal_based mode (format: x,y)')
-    parser.add_argument('--return-interval', type=int, default=120,
-                       help='Return interval in seconds for homing mode (default: 120)')
-    
+                        help='Skip Docker pre-flight check')
     args = parser.parse_args()
-    
-    # Print banner
-    print_banner()
-    
-    # Check Docker (unless skipped)
-    if not args.no_check:
-        if not check_docker():
-            print("Cannot proceed without Docker running")
-            return 1
-    
-    # Get mode (from args or interactive)
-    if args.mode:
-        mode = args.mode
-        print(f"\nMode selected: {mode}")
-    else:
-        mode = select_mode()
-    
-    # Execute selected mode
-    if mode == 'exit':
-        print("Goodbye! 👋")
-        return 0
-    
-    elif mode == 'manual':
-        success = run_manual_mode()
-        return 0 if success else 1
-    
-    elif mode == 'autonomous':
-        success = run_autonomous_mode()
-        return 0 if success else 1
-    
-    elif mode == 'goal_based':
-        success = run_goal_based_mode()
-        return 0 if success else 1
-    
-    elif mode == 'homing':
-        success = run_homing_mode()
-        return 0 if success else 1
-    
-    else:
-        print(f"Unknown mode: {mode}")
-        return 1
+
+    controller = UnifiedController(
+        return_interval=args.return_interval,
+        no_check=args.no_check,
+    )
+    controller.run()
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        print("\n\nInterrupted by user")
-        sys.exit(0)
-    except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    main()

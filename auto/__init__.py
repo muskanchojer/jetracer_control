@@ -7,6 +7,7 @@ from .vision import VisionProcessor, CameraStream
 from .policy import PolicyNetwork, PolicyEvaluator
 from .control_adapter import ControlAdapter, SafetyMonitor
 from .homing_controller import HomingController, HomingMode, ReversalPlanner
+from .straight_line_corrector import StraightLineCorrector
 
 __all__ = [
     'VisionProcessor',
@@ -18,6 +19,5 @@ __all__ = [
     'HomingController',
     'HomingMode',
     'ReversalPlanner',
+    'StraightLineCorrector',
 ]
-
-__version__ = '1.1.0'

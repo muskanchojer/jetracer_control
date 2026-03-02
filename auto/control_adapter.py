@@ -2,14 +2,18 @@
 """
 Control Adapter - Maps policy predictions to robot commands
 Handles the translation between AI decisions and ROS motor control
+Supports differential left/right model with straight-line correction
 """
 
 import subprocess
 import logging
 import time
 
+from auto.straight_line_corrector import StraightLineCorrector
+
+
 class ControlAdapter:
-    """Adapts policy outputs to robot motor commands"""
+    """Adapts policy outputs to robot motor commands with straight-line correction"""
     
     def __init__(self, config, container_name="jetracer_ros"):
         self.config = config
@@ -19,8 +23,21 @@ class ControlAdapter:
         # Load control mappings from config
         self.control_map = config['control_mapping']
         
-        self.logger.info("Control adapter initialized")
+        # Wheel base for differential model (metres)
+        self.wheel_base = config.get('robot_params', {}).get('wheel_base', 0.20)
+        
+        # Straight-line corrector
+        self.corrector = StraightLineCorrector(config)
+        
+        # ROS bridge reference (set externally for IMU/wheel data)
+        self.ros_bridge = None
+        
+        self.logger.info("Control adapter initialized (with straight-line correction)")
         self.logger.info(f"Control mappings: {self.control_map}")
+    
+    def set_ros_bridge(self, bridge):
+        """Set the ROS bridge for IMU/wheel sensor data."""
+        self.ros_bridge = bridge
     
     def action_to_velocity(self, action):
         """Convert action name to linear and angular velocities"""
@@ -33,6 +50,19 @@ class ControlAdapter:
         angular = mapping['angular']
         
         return linear, angular
+    
+    def differential_to_twist(self, left_speed, right_speed):
+        """Convert differential left/right speeds to Twist (linear.x, angular.z)."""
+        linear = (left_speed + right_speed) / 2.0
+        angular = (right_speed - left_speed) / self.wheel_base
+        return linear, angular
+    
+    def twist_to_differential(self, linear, angular):
+        """Convert Twist (linear.x, angular.z) to differential left/right speeds."""
+        half = angular * self.wheel_base / 2.0
+        left = linear - half
+        right = linear + half
+        return left, right
     
     
     def send_velocity_command(self, linear, angular, timeout=2.0):
@@ -73,20 +103,41 @@ class ControlAdapter:
             self.logger.error(f"Error sending command: {e}")
             return False
     
+    def send_corrected_command(self, linear, angular, is_turning=False):
+        """
+        Send velocity command with straight-line correction applied.
+        Reads IMU/wheel data from ros_bridge automatically.
+
+        Args:
+            linear: desired linear.x (m/s)
+            angular: desired angular.z (rad/s)
+            is_turning: True when robot is intentionally turning
+        """
+        corrected_angular = angular
+
+        if self.ros_bridge is not None and self.corrector.is_locked():
+            imu_yaw, gyro_z, _ = self.ros_bridge.get_imu_yaw_gyro()
+            left_vel, right_vel = self.ros_bridge.get_wheel_velocities()
+
+            # Apply spike filter
+            imu_yaw = self.corrector.filter_yaw(imu_yaw)
+
+            corrected_angular = self.corrector.compute_correction(
+                angular, imu_yaw, gyro_z, left_vel, right_vel,
+                is_turning=is_turning,
+            )
+
+        return self.send_velocity_command(linear, corrected_angular)
+
     def execute_action(self, action, confidence=1.0):
-        """Execute a policy action"""
+        """Execute a policy action with straight-line correction"""
         linear, angular = self.action_to_velocity(action)
         
         self.logger.debug(f"Executing action: {action} (conf: {confidence:.2f}) -> "
                          f"L={linear:.2f}, A={angular:.2f}")
         
-        success = self.send_velocity_command(linear, angular)
-        
-        if success:
-            # Log to safety monitor
-            from . import control_adapter
-            # Action will be logged by caller
-            pass
+        is_turning = action in ('left', 'right')
+        success = self.send_corrected_command(linear, angular, is_turning=is_turning)
         
         return success
     

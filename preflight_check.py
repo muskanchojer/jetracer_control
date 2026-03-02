@@ -142,11 +142,47 @@ def check_modules():
         errors.append(f"auto.control_adapter: {e}")
     
     try:
-        from scripts.autonomous_control import AutonomousController
-        print("  ✓ scripts.autonomous_control")
+        from auto.ros_bridge import ROSTopicBridge
+        print("  ✓ auto.ros_bridge")
     except Exception as e:
-        errors.append(f"scripts.autonomous_control: {e}")
-    
+        errors.append(f"auto.ros_bridge: {e}")
+
+    try:
+        from auto.navigation import WaypointNavigator
+        print("  ✓ auto.navigation")
+    except Exception as e:
+        errors.append(f"auto.navigation: {e}")
+
+    try:
+        from auto.fusion_controller import FusionController, VisionCommand
+        print("  ✓ auto.fusion_controller")
+    except Exception as e:
+        errors.append(f"auto.fusion_controller: {e}")
+
+    try:
+        from auto.homing_controller import HomingController, HomingMode
+        print("  ✓ auto.homing_controller")
+    except Exception as e:
+        errors.append(f"auto.homing_controller: {e}")
+
+    try:
+        from auto.straight_line_corrector import quaternion_to_yaw_deg
+        print("  ✓ auto.straight_line_corrector")
+    except Exception as e:
+        errors.append(f"auto.straight_line_corrector: {e}")
+
+    try:
+        from auto.display import DisplayWindow
+        print("  ✓ auto.display")
+    except Exception as e:
+        errors.append(f"auto.display: {e}")
+
+    try:
+        from auto.exploration import ExplorationStrategy
+        print("  ✓ auto.exploration")
+    except Exception as e:
+        errors.append(f"auto.exploration: {e}")
+
     if errors:
         print("\n❌ Module errors:")
         for err in errors:

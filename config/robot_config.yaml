@@ -28,6 +28,7 @@ robot_params:
   pid_p: 350
   pid_i: 120
   pid_d: 0
+  wheel_base: 0.20         # Distance between wheels (meters)
 
 # Feature Flags (enable/disable modules)
 features:

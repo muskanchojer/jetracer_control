@@ -456,6 +456,35 @@ class ROSTopicBridge:
                 'timestamp': self.imu_timestamp
             }
     
+    def get_imu_yaw_gyro(self):
+        """
+        Get IMU yaw (degrees) and gyro_z (rad/s) for straight-line correction.
+        Returns: (yaw_degrees, gyro_z_rad_s, timestamp)
+        """
+        import math
+        with self._imu_lock:
+            siny = 2.0 * (self.imu_orientation_w * self.imu_orientation_z +
+                          self.imu_orientation_x * self.imu_orientation_y)
+            cosy = 1.0 - 2.0 * (self.imu_orientation_y ** 2 +
+                                self.imu_orientation_z ** 2)
+            yaw_deg = math.degrees(math.atan2(siny, cosy))
+            return yaw_deg, self.imu_gyro_z, self.imu_timestamp
+
+    def get_wheel_velocities(self):
+        """
+        Derive left/right wheel velocities from odometry twist.
+        Uses differential-drive model: v = (vl+vr)/2, omega = (vr-vl)/wheel_base.
+        Returns: (left_vel, right_vel)   (in m/s, approximate)
+        """
+        wheel_base = 0.20  # metres — same default as homing_controller
+        with self._lock:
+            v = self.vx
+            omega = self.vtheta
+        half = omega * wheel_base / 2.0
+        left_vel = v - half
+        right_vel = v + half
+        return left_vel, right_vel
+
     def get_imu_integrated_position(self):
         """
         Get IMU-integrated position estimate (dead reckoning)

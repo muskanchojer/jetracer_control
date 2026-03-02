@@ -116,3 +116,41 @@ homing:
     turn_speed: 0.6             # Turn speed during escape (rad/s)
     reverse_duration: 1.0       # How long to reverse (seconds)
     turn_duration: 0.5          # How long to turn (seconds)
+
+# Unified controller settings
+unified_controller:
+  manual_override_timeout: 3.0      # Seconds of no WASD input before auto-resuming
+  home_pause_seconds: 2.0           # Pause at home before restarting exploration
+  straight_correction_turn_scale: 0.5  # Scale correction by this factor during turns
+  status_display_hz: 2              # Status line refresh rate
+
+# Straight-line IMU + wheel correction (ported from v1.2 ultimate_straight)
+ultimate_straight:
+  base_offset: -0.0445
+  # IMU PID gains
+  imu_kp: 0.12
+  imu_ki: 0.008
+  imu_kd: 0.05
+  imu_max_correction: 0.45
+  imu_max_integral: 10.0
+  imu_kd_max: 0.20
+  imu_integral_zone: 3.0
+  imu_integral_decay: 0.9
+  # Yaw spike filter
+  max_yaw_rate_dps: 60.0
+  # Wheel velocity PI
+  whl_kp: 0.0004
+  whl_ki: 0.00001
+  whl_max_correction: 0.08
+  whl_max_integral: 5000.0
+  whl_gate_deg: 2.0
+  # Safety
+  error_stop_deg: 15.0
+  total_max_steer: 0.50
+
+# Exploration strategy (autonomous mode frontier-based driving)
+exploration:
+  cell_size: 0.4                # Grid resolution in metres
+  max_frontier_dist: 3.0        # Max distance to pick a frontier (metres)
+  min_frontier_dist: 0.6        # Min distance (don't pick cells right under the robot)
+  angular_nudge: 0.35           # Max angular nudge toward frontier (rad/s)

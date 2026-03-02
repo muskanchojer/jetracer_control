@@ -438,6 +438,11 @@ class WaypointNavigator:
         """Get raw odometry position (x, y, theta) without IMU fusion"""
         with self.lock:
             return self.current_state.x, self.current_state.y, self.current_state.theta
+
+    def distance_to(self, x: float, y: float) -> float:
+        """Get Euclidean distance from current position to a point."""
+        cx, cy, _ = self.get_position()
+        return math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
     
     def get_status(self) -> dict:
         """Get navigation status for logging/debugging (includes sensor fusion info)"""

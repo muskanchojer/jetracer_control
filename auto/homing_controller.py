@@ -112,7 +112,8 @@ class HomingController:
         
         # State
         self.mode = HomingMode.AT_HOME  # Start at home
-        self.start_position = DeadReckoningState()  # Origin (0, 0, 0)
+        self.home_position = DeadReckoningState()  # Home origin (0, 0, 0)
+        self.start_position = DeadReckoningState()  # Origin (0, 0, 0) — kept for compat
         self.current_position = DeadReckoningState()
         self.command_history: Deque[MotionCommand] = deque(maxlen=1000)  # Last ~1000 commands
         self.stuck_state = StuckDetectorState()
@@ -140,6 +141,7 @@ class HomingController:
         """Start a new homing session - resets origin to current position"""
         with self.lock:
             self.mode = HomingMode.EXPLORING
+            self.home_position = DeadReckoningState()
             self.start_position = DeadReckoningState()
             self.current_position = DeadReckoningState()
             self.command_history.clear()
@@ -149,7 +151,20 @@ class HomingController:
             self.stuck_state = StuckDetectorState()
             self.running = True
         
-        self.logger.info("🏠 Homing session started - origin set to current position")
+        self.logger.info("Homing session started - origin set to current position")
+
+    def set_home(self, x: float, y: float, theta: float = 0.0):
+        """Set / reset the home position at runtime."""
+        with self.lock:
+            self.home_position = DeadReckoningState(x=x, y=y, theta=theta)
+            self.start_position = DeadReckoningState(x=x, y=y, theta=theta)
+            self.last_exploration_start = time.time()
+        self.logger.info(f"Home position set to ({x:.2f}, {y:.2f}, {math.degrees(theta):.1f} deg)")
+
+    def get_home(self) -> Tuple[float, float, float]:
+        """Return the current home position (x, y, theta)."""
+        with self.lock:
+            return self.home_position.x, self.home_position.y, self.home_position.theta
     
     def stop_session(self):
         """Stop the homing session"""
@@ -354,8 +369,8 @@ class HomingController:
                 return None
             
             # Calculate vector to home
-            dx = self.start_position.x - self.current_position.x
-            dy = self.start_position.y - self.current_position.y
+            dx = self.home_position.x - self.current_position.x
+            dy = self.home_position.y - self.current_position.y
             distance_to_home = math.sqrt(dx*dx + dy*dy)
             
             # Check if we're home
@@ -417,8 +432,8 @@ class HomingController:
     def get_distance_from_home(self) -> float:
         """Get distance from home position"""
         with self.lock:
-            dx = self.current_position.x - self.start_position.x
-            dy = self.current_position.y - self.start_position.y
+            dx = self.current_position.x - self.home_position.x
+            dy = self.current_position.y - self.home_position.y
             return math.sqrt(dx*dx + dy*dy)
     
     def get_time_until_return(self) -> float:
